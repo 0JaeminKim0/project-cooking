@@ -29,6 +29,10 @@ function setupEventListeners() {
     addTeamMemberForm.addEventListener('submit', handleAddTeamMember);
     analyzeTeamBtn.addEventListener('click', handleAnalyzeTeam);
     backToProjectsBtn.addEventListener('click', backToProjectList);
+    
+    // Demo test buttons
+    document.getElementById('demoTestBtn').addEventListener('click', handleDemoTest);
+    document.getElementById('resetDemoBtn').addEventListener('click', handleResetDemo);
 }
 
 // Utility functions
@@ -750,6 +754,178 @@ async function uploadFile(file, fileType, projectId = null, teamMemberId = null)
     }
 }
 
+// Demo test functionality
+async function handleDemoTest() {
+    try {
+        // Show confirmation dialog
+        if (!confirm('🚀 데모 테스트를 시작하시겠습니까?\n\n샘플 프로젝트 3개와 각각의 팀원들이 자동으로 생성됩니다.\n생성 완료 후 자동으로 AI 분석도 실행됩니다.')) {
+            return;
+        }
+
+        showLoading('🔮 데모 데이터를 생성하고 있습니다...\n잠시만 기다려주세요 (약 10-15초)');
+        
+        // Generate demo data
+        const demoData = await apiRequest('/api/demo/generate', {
+            method: 'POST'
+        });
+        
+        showNotification('✨ 데모 데이터가 성공적으로 생성되었습니다!', 'success');
+        
+        // Show demo info
+        document.getElementById('demoInfo').classList.remove('hidden');
+        
+        // Reload projects
+        await loadProjects();
+        
+        hideLoading();
+        
+        // Auto-select and analyze first project
+        if (demoData.projects && demoData.projects.length > 0) {
+            showNotification('🤖 첫 번째 프로젝트의 AI 분석을 시작합니다...', 'info');
+            
+            setTimeout(async () => {
+                try {
+                    await selectProject(demoData.projects[0].id);
+                    
+                    // Wait a bit for UI to settle
+                    setTimeout(async () => {
+                        await handleAnalyzeTeam();
+                        
+                        // Show success message with tips
+                        setTimeout(() => {
+                            showNotification('🎉 데모 완료! 다른 프로젝트들도 확인해보세요!', 'success');
+                        }, 2000);
+                    }, 1000);
+                } catch (error) {
+                    console.error('Auto analysis failed:', error);
+                }
+            }, 500);
+        }
+        
+    } catch (error) {
+        hideLoading();
+        showNotification('데모 데이터 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+    }
+}
+
+async function handleResetDemo() {
+    try {
+        if (!confirm('🗑️ 모든 데모 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+            return;
+        }
+
+        showLoading('데모 데이터를 초기화하고 있습니다...');
+        
+        await apiRequest('/api/demo/reset', {
+            method: 'DELETE'
+        });
+        
+        // Hide demo info
+        document.getElementById('demoInfo').classList.add('hidden');
+        
+        // Reset UI state
+        backToProjectList();
+        await loadProjects();
+        
+        hideLoading();
+        showNotification('모든 데모 데이터가 삭제되었습니다.', 'info');
+        
+    } catch (error) {
+        hideLoading();
+        showNotification('데이터 초기화 중 오류가 발생했습니다: ' + error.message, 'error');
+    }
+}
+
+// Enhanced project display with demo indicators
+function displayProjectsWithDemo(projects) {
+    if (projects.length === 0) {
+        projectList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p>프로젝트가 없습니다.</p>
+                <p class="text-sm mt-2">🚀 Demo Test로 샘플 프로젝트를 생성해보세요!</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Detect if these are demo projects
+    const demoIndicators = ['🤖', '📱', '🏥'];
+    const hasDemoProjects = projects.some(p => demoIndicators.some(icon => p.name.includes(icon)));
+
+    projectList.innerHTML = projects.map(project => `
+        <div class="project-item bg-gray-50 p-4 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors fade-in" 
+             onclick="selectProject(${project.id})">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <h5 class="font-semibold text-gray-800">${project.name}</h5>
+                        ${hasDemoProjects && demoIndicators.some(icon => project.name.includes(icon)) ? 
+                            '<span class="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">DEMO</span>' : 
+                            ''}
+                    </div>
+                    ${project.client_company ? `<p class="text-sm text-gray-600">${project.client_company}</p>` : ''}
+                    ${project.rfp_summary ? `<p class="text-sm text-gray-500 mt-1">${project.rfp_summary.slice(0, 100)}...</p>` : ''}
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-gray-500">${formatDate(project.created_at)}</span>
+                    <div class="flex items-center mt-1">
+                        <i class="fas fa-arrow-right text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Override the original displayProjects function
+function displayProjects(projects) {
+    displayProjectsWithDemo(projects);
+}
+
+// Add demo project quick actions
+function addDemoProjectActions() {
+    const demoProjects = document.querySelectorAll('.project-item');
+    demoProjects.forEach((item, index) => {
+        if (item.querySelector('.bg-purple-100')) { // Demo project
+            const actionBtn = document.createElement('button');
+            actionBtn.className = 'ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600';
+            actionBtn.innerHTML = '<i class="fas fa-zap mr-1"></i>분석';
+            actionBtn.onclick = (e) => {
+                e.stopPropagation();
+                // Quick analysis for demo projects
+                const projectId = item.getAttribute('onclick').match(/\d+/)[0];
+                quickAnalyzeProject(parseInt(projectId));
+            };
+            
+            const titleDiv = item.querySelector('h5').parentElement;
+            titleDiv.appendChild(actionBtn);
+        }
+    });
+}
+
+async function quickAnalyzeProject(projectId) {
+    try {
+        showLoading('프로젝트를 선택하고 AI 분석을 시작합니다...');
+        
+        await selectProject(projectId);
+        
+        setTimeout(async () => {
+            if (currentTeamMembers && currentTeamMembers.length > 0) {
+                await handleAnalyzeTeam();
+                hideLoading();
+            } else {
+                hideLoading();
+                showNotification('팀원이 없는 프로젝트입니다.', 'warning');
+            }
+        }, 1000);
+        
+    } catch (error) {
+        hideLoading();
+        showNotification('빠른 분석 중 오류가 발생했습니다.', 'error');
+    }
+}
+
 // Console log for debugging
 console.log('AI 팀 분석 서비스 JavaScript 로드됨');
-console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드');
+console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트');

@@ -281,6 +281,180 @@ app.post('/api/upload', async (c) => {
   }
 });
 
+// Demo data generation endpoint
+app.post('/api/demo/generate', async (c) => {
+  try {
+    const { env } = c;
+    
+    // Sample project data
+    const sampleProjects = [
+      {
+        name: '🤖 AI 챗봇 플랫폼 구축',
+        client_company: 'TechFlow Corp',
+        rfp_content: `고객 상담을 위한 AI 기반 챗봇 플랫폼을 개발하려고 합니다. 
+        
+주요 요구사항:
+- GPT-4 기반 자연어 처리
+- 실시간 채팅 인터페이스  
+- 다국어 지원 (한국어, 영어, 중국어)
+- RESTful API 설계
+- React 기반 관리자 대시보드
+- MongoDB 데이터베이스 연동
+- AWS 클라우드 배포
+        
+예상 프로젝트 기간: 3개월
+예산: 5억원`,
+        requirements: ['AI/ML', 'React', 'Node.js', 'MongoDB', 'AWS', '자연어처리', 'RESTful API', '다국어 지원']
+      },
+      {
+        name: '📱 스마트 배송 모바일 앱',  
+        client_company: 'LogiSmart Inc',
+        rfp_content: `실시간 배송 추적 및 관리를 위한 모바일 애플리케이션 개발 프로젝트입니다.
+
+주요 기능:
+- React Native 크로스 플랫폼 앱
+- 실시간 GPS 위치 추적
+- 푸시 알림 서비스
+- QR코드 스캔 기능
+- 배송원-고객 채팅
+- 결제 시스템 연동
+- 관리자 웹 대시보드
+
+기술 스택: React Native, Node.js, PostgreSQL, Redis, Socket.io
+예상 기간: 4개월`,
+        requirements: ['React Native', 'Node.js', 'PostgreSQL', 'Redis', 'Socket.io', 'GPS', '모바일 개발', '실시간 통신']
+      },
+      {
+        name: '🏥 헬스케어 데이터 분석 시스템',
+        client_company: 'MediData Solutions', 
+        rfp_content: `의료 빅데이터 분석 및 시각화 플랫폼 구축 프로젝트입니다.
+
+핵심 요구사항:
+- Python 기반 데이터 분석 엔진
+- 머신러닝 모델 개발 (TensorFlow/PyTorch)
+- 실시간 대시보드 (D3.js, Chart.js)
+- FHIR 표준 준수
+- 개인정보보호 강화
+- Docker 컨테이너화
+- 클라우드 네이티브 아키텍처
+
+데이터 규모: 일일 100만건+
+성능 요구사항: 99.9% 가용성`,
+        requirements: ['Python', 'Machine Learning', 'TensorFlow', 'D3.js', 'FHIR', 'Docker', '빅데이터', '데이터 시각화']
+      }
+    ];
+
+    // Sample team members for each project
+    const sampleTeamMembers = [
+      // AI 챗봇 팀
+      [
+        { name: '김지훈', role: 'AI Engineer', mbti: 'INTJ', skills: 'Python, TensorFlow, NLP, GPT API, 머신러닝', experience: '5년 AI 개발, 챗봇 프로젝트 3건 리드' },
+        { name: '박소영', role: 'Frontend Developer', mbti: 'ENFP', skills: 'React, TypeScript, Redux, CSS3, 반응형 웹', experience: '4년 프론트엔드, 10개+ SPA 구축' },
+        { name: '이성민', role: 'Backend Developer', mbti: 'ISTJ', skills: 'Node.js, Express, MongoDB, Redis, AWS', experience: '6년 백엔드, 대규모 API 설계 전문' },
+        { name: '최유진', role: 'DevOps Engineer', mbti: 'ENTP', skills: 'AWS, Docker, Kubernetes, CI/CD, 모니터링', experience: '3년 클라우드, MSA 운영 경험' }
+      ],
+      // 모바일 앱 팀  
+      [
+        { name: '장민호', role: 'Full Stack Developer', mbti: 'ENTJ', skills: 'React Native, Node.js, PostgreSQL, Socket.io', experience: '7년 풀스택, 모바일 앱 5개 출시' },
+        { name: '김하늘', role: 'Mobile Developer', mbti: 'ISFP', skills: 'React Native, Swift, Kotlin, 앱스토어 배포', experience: '4년 모바일, 네이티브 + 하이브리드 개발' },
+        { name: '정다은', role: 'UI/UX Designer', mbti: 'ESFJ', skills: 'Figma, Adobe XD, 프로토타이핑, 사용자 테스트', experience: '5년 디자인, 모바일 UX 전문' },
+        { name: '오승철', role: 'Backend Developer', mbti: 'INTP', skills: 'Node.js, PostgreSQL, Redis, 실시간 시스템', experience: '5년 백엔드, 고성능 API 개발' }
+      ],
+      // 헬스케어 팀
+      [
+        { name: '황민수', role: 'Data Scientist', mbti: 'INTJ', skills: 'Python, TensorFlow, Pandas, 통계분석, MLOps', experience: '6년 데이터 사이언스, 의료 도메인 전문' },
+        { name: '신지영', role: 'Backend Developer', mbti: 'ISTJ', skills: 'Python, Django, PostgreSQL, Docker, FHIR', experience: '8년 백엔드, 헬스케어 시스템 구축' },
+        { name: '한준혁', role: 'Frontend Developer', mbti: 'ENFJ', skills: 'React, D3.js, Chart.js, 데이터 시각화', experience: '4년 프론트엔드, 대시보드 전문' },
+        { name: '배서현', role: 'DevOps Engineer', mbti: 'ESTP', skills: 'Docker, Kubernetes, 모니터링, 보안', experience: '4년 DevOps, 의료 보안 컴플라이언스' }
+      ]
+    ];
+
+    const createdProjects = [];
+    
+    // Create projects and team members
+    for (let i = 0; i < sampleProjects.length; i++) {
+      const project = sampleProjects[i];
+      
+      // Create project
+      const projectResult = await env.DB.prepare(`
+        INSERT INTO projects (name, client_company, rfp_content, rfp_summary, requirements_analysis) 
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        project.name,
+        project.client_company,
+        project.rfp_content,
+        project.rfp_content.split('\\n')[0] + '...',
+        JSON.stringify(project.requirements)
+      ).run();
+
+      const projectId = projectResult.meta.last_row_id;
+      const teamMembers = sampleTeamMembers[i];
+      
+      // Create team members
+      const createdMembers = [];
+      for (const member of teamMembers) {
+        const memberResult = await env.DB.prepare(`
+          INSERT INTO team_members (project_id, name, role, mbti, skills_extracted, experience_summary) 
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(
+          projectId,
+          member.name,
+          member.role,
+          member.mbti,
+          member.skills,
+          member.experience
+        ).run();
+        
+        createdMembers.push({
+          id: memberResult.meta.last_row_id,
+          ...member
+        });
+      }
+      
+      createdProjects.push({
+        id: projectId,
+        name: project.name,
+        client_company: project.client_company,
+        team_members: createdMembers
+      });
+    }
+
+    return c.json({ 
+      message: '데모 데이터가 성공적으로 생성되었습니다!',
+      projects: createdProjects
+    });
+    
+  } catch (error) {
+    console.error('데모 데이터 생성 오류:', error);
+    return c.json({ error: '데모 데이터 생성 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// Reset demo data endpoint
+app.delete('/api/demo/reset', async (c) => {
+  try {
+    const { env } = c;
+    
+    // Delete all data in reverse order due to foreign key constraints
+    await env.DB.prepare('DELETE FROM analysis_results').run();
+    await env.DB.prepare('DELETE FROM uploaded_files').run(); 
+    await env.DB.prepare('DELETE FROM team_members').run();
+    await env.DB.prepare('DELETE FROM projects').run();
+    
+    // Reset auto-increment counters
+    await env.DB.prepare('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "projects"').run();
+    await env.DB.prepare('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "team_members"').run();
+    await env.DB.prepare('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "analysis_results"').run();
+    await env.DB.prepare('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "uploaded_files"').run();
+    
+    return c.json({ message: '데모 데이터가 초기화되었습니다.' });
+    
+  } catch (error) {
+    console.error('데모 데이터 초기화 오류:', error);
+    return c.json({ error: '데이터 초기화 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 // Main page
 app.get('/', (c) => {
   return c.html(`
@@ -320,10 +494,31 @@ app.get('/', (c) => {
                     <i class="fas fa-magic mr-3 text-purple-600"></i>
                     프로젝트 팀 적합도 AI 분석
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
                     RFP 문서와 팀원 정보를 업로드하면 AI가 자동으로 프로젝트 적합도를 분석하고<br>
                     팀 케미스트리, 기술 커버리지, 추천 학습 자료를 제공합니다.
                 </p>
+                
+                <!-- Demo Test Button -->
+                <div class="flex justify-center space-x-4 mb-8">
+                    <button id="demoTestBtn" 
+                            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg">
+                        <i class="fas fa-flask mr-2"></i>
+                        🚀 Demo Test 시작하기
+                    </button>
+                    <button id="resetDemoBtn" 
+                            class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-refresh mr-2"></i>
+                        데모 초기화
+                    </button>
+                </div>
+                
+                <div id="demoInfo" class="hidden bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        <span class="text-blue-800 font-medium">데모 모드: 샘플 프로젝트와 팀원이 자동 생성됩니다</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Quick Stats -->
