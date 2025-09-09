@@ -1,21 +1,153 @@
-```txt
-npm install
-npm run dev
-```
+# AI 기반 팀 분석 서비스 🚀
 
-```txt
-npm run deploy
-```
+## 프로젝트 개요
+- **명칭**: AI 기반 팀 분석 서비스
+- **목표**: RFP 분석과 팀 구성원 정보를 바탕으로 프로젝트 적합도를 AI가 자동 분석하여 최적의 팀 구성을 지원
+- **핵심 기능**: GPT-4o 기반 RFP 자동 분석, MBTI 팀 케미스트리 분석, 기술 커버리지 시각화, AI 추천 학습 자료 제공
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+## 서비스 URL 🌐
+- **개발 서버**: https://3000-iadep3e2teuu35egytyn5-6532622b.e2b.dev
+- **API 베이스**: https://3000-iadep3e2teuu35egytyn5-6532622b.e2b.dev/api
 
-```txt
-npm run cf-typegen
-```
+## 데이터 아키텍처 📊
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
+### 주요 데이터 모델
+- **Projects**: 프로젝트 정보, RFP 내용, AI 분석 요약
+- **Team Members**: 팀원 정보, 역할, MBTI, 스킬 정보
+- **Analysis Results**: AI 분석 결과, 점수, 권장사항, 학습 자료
+- **Uploaded Files**: RFP 문서, CD 카드 등 업로드된 파일
 
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-```
+### 저장 서비스
+- **Cloudflare D1**: SQLite 기반 관계형 데이터 저장
+- **Cloudflare R2**: 파일 및 문서 저장소 (향후 구현)
+- **로컬 개발**: `.wrangler/state/v3/d1` 로컬 SQLite DB
+
+### 데이터 흐름
+1. **RFP 입력** → GPT-4o API 분석 → 요구사항 추출 → DB 저장
+2. **팀원 정보** → MBTI 상성 분석 → 스킬 매칭 → 점수 계산
+3. **종합 분석** → AI 권장사항 생성 → 시각화 데이터 → 대시보드 표시
+
+## 현재 구현된 기능 ✅
+
+### 1. 프로젝트 관리
+- [x] 새 프로젝트 생성
+- [x] RFP 내용 입력 및 AI 자동 분석
+- [x] 프로젝트 목록 조회
+- [x] 프로젝트별 상세 정보 관리
+
+### 2. 팀원 관리
+- [x] 팀원 추가 (이름, 역할, MBTI)
+- [x] 팀 구성 현황 표시
+- [x] MBTI 타입별 배지 및 색상 구분
+
+### 3. AI 분석 엔진
+- [x] **RFP 자동 분석**: GPT-4o를 통한 요구사항 추출
+- [x] **팀 케미스트리 분석**: MBTI 기반 상성 점수 계산
+- [x] **기술 커버리지 분석**: 프로젝트 요구사항 vs 팀 스킬 매칭
+- [x] **종합 적합도 점수**: 다차원 분석 결과 통합
+
+### 4. 시각화 대시보드
+- [x] **Radar Chart**: 프로젝트 요구사항 vs 팀 역량 비교
+- [x] **Bar Chart**: 역량별 커버리지 히트맵
+- [x] **점수 카드**: 전체 적합도, 케미스트리, 도메인/기술 커버리지
+- [x] **애니메이션**: 점수 카운트업, 차트 전환 효과
+
+### 5. AI 추천 시스템
+- [x] **개선 권장사항**: GPT-4o 기반 팀 보완점 분석
+- [x] **학습 자료 추천**: 프로젝트별 맞춤 학습 콘텐츠 제안
+- [x] **실시간 분석**: 팀 구성 변경 시 즉시 재분석
+
+## API 엔드포인트 🔗
+
+### 프로젝트 관리
+- `GET /api/projects` - 전체 프로젝트 목록
+- `POST /api/projects` - 새 프로젝트 생성 및 RFP 분석
+- `GET /api/projects/:id` - 프로젝트 상세 정보 (팀원, 분석 결과 포함)
+
+### 팀 관리
+- `POST /api/team-members` - 팀원 추가
+- `POST /api/analyze-team` - AI 팀 분석 실행
+
+### 파일 관리 (향후 완성 예정)
+- `POST /api/upload` - RFP 문서, CD 카드 업로드
+
+## 사용자 가이드 📖
+
+### 1. 프로젝트 생성
+1. 메인 페이지에서 "새 프로젝트 생성" 섹션 접근
+2. 프로젝트명, 고객사명, RFP 내용 입력
+3. "프로젝트 생성 및 AI 분석" 버튼 클릭
+4. AI가 RFP를 자동 분석하여 핵심 요구사항 추출
+
+### 2. 팀원 구성
+1. 생성된 프로젝트 선택하여 상세 페이지 진입
+2. "팀원 추가" 폼에서 이름, 역할, MBTI 정보 입력
+3. 여러 팀원을 순차적으로 추가
+4. 현재 팀 구성 현황을 실시간으로 확인
+
+### 3. AI 팀 분석
+1. 최소 1명 이상의 팀원 추가 완료
+2. "AI 팀 분석 시작" 버튼 활성화 및 클릭
+3. GPT-4o가 종합적으로 팀 적합도 분석
+4. 점수, 차트, 권장사항이 포함된 결과 대시보드 확인
+
+### 4. 분석 결과 해석
+- **전체 적합도**: 프로젝트 성공 가능성 종합 점수
+- **팀 케미스트리**: MBTI 기반 팀원 간 상성 점수
+- **도메인 커버리지**: 프로젝트 도메인 지식 보유 정도
+- **기술 커버리지**: 필요 기술 스택 보유 정도
+
+## 기술 스택 🛠
+
+### Backend
+- **Hono Framework**: 경량 웹 프레임워크 (Cloudflare Workers 최적화)
+- **TypeScript**: 타입 안전 개발
+- **Cloudflare D1**: 글로벌 분산 SQLite 데이터베이스
+- **OpenAI GPT-4o API**: AI 분석 엔진
+
+### Frontend
+- **Vanilla JavaScript**: 순수 자바스크립트 + CDN 라이브러리
+- **Tailwind CSS**: 유틸리티 퍼스트 CSS 프레임워워크
+- **Chart.js**: 데이터 시각화 라이브러리
+- **FontAwesome**: 아이콘 라이브러리
+- **Axios**: HTTP 클라이언트
+
+### 배포 플랫폼
+- **Cloudflare Pages**: 엣지 서버리스 배포
+- **Cloudflare Workers**: 백엔드 로직 실행
+- **PM2**: 로컬 개발 프로세스 관리
+
+## 배포 상태 📋
+- **플랫폼**: Cloudflare Pages (향후 배포 예정)
+- **현재 상태**: ✅ 로컬 개발 서버 활성화
+- **기술 스택**: Hono + TypeScript + D1 + GPT-4o
+- **마지막 업데이트**: 2025-09-09
+
+## 향후 개발 계획 🎯
+
+### 우선 순위 높음
+- [ ] **파일 업로드 기능**: PDF RFP 문서, CD 카드 업로드 및 OCR 처리
+- [ ] **OpenAI API 키 설정**: 환경 변수로 GPT-4o API 연동 완성
+- [ ] **Cloudflare Pages 배포**: 프로덕션 환경 구축
+
+### 우선 순위 중간
+- [ ] **팀원 삭제/수정**: CRUD 기능 완성
+- [ ] **프로젝트 편집**: 기존 프로젝트 정보 수정
+- [ ] **분석 히스토리**: 과거 분석 결과 조회
+- [ ] **PDF 리포트 생성**: 분석 결과 PDF 다운로드
+
+### 향후 확장 기능
+- [ ] **실시간 협업**: WebSocket 기반 실시간 팀 편집
+- [ ] **AI 학습 자료 생성**: 맞춤형 교육 콘텐츠 자동 생성
+- [ ] **프로젝트 템플릿**: 산업별/기술별 프로젝트 템플릿 제공
+- [ ] **성과 추적**: 실제 프로젝트 결과와 예측 정확도 비교
+
+## 개발자 정보
+- **개발 프레임워크**: Hono Framework + Cloudflare Workers
+- **AI 엔진**: OpenAI GPT-4o
+- **개발 환경**: E2B Sandbox + PM2 Process Manager
+- **코드 관리**: Git + 자동 커밋 시스템
+
+---
+
+*이 서비스는 실제 컨설팅 프로젝트의 팀 구성 최적화를 위해 설계되었으며, AI 기반 의사결정 지원 도구로 활용 가능합니다.*
