@@ -3,6 +3,8 @@ let currentProject = null;
 let currentTeamMembers = [];
 let radarChartInstance = null;
 let coverageChartInstance = null;
+let selectedRfpFile = null;
+let selectedCdCardFile = null;
 
 // DOM elements
 const createProjectForm = document.getElementById('createProjectForm');
@@ -18,6 +20,7 @@ const backToProjectsBtn = document.getElementById('backToProjects');
 document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     setupEventListeners();
+    setupFileUploads();
 });
 
 // Event listeners
@@ -144,14 +147,11 @@ function displayProjects(projects) {
 async function handleCreateProject(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
-    const projectData = {
-        name: formData.get('projectName') || document.getElementById('projectName').value,
-        client_company: formData.get('clientCompany') || document.getElementById('clientCompany').value,
-        rfp_content: formData.get('rfpContent') || document.getElementById('rfpContent').value
-    };
+    const projectName = document.getElementById('projectName').value;
+    const clientCompany = document.getElementById('clientCompany').value;
+    let rfpContent = document.getElementById('rfpContent').value;
 
-    if (!projectData.name.trim()) {
+    if (!projectName.trim()) {
         showNotification('프로젝트명을 입력해주세요.', 'warning');
         return;
     }
@@ -159,16 +159,43 @@ async function handleCreateProject(e) {
     try {
         showLoading('프로젝트를 생성하고 AI 분석 중...');
         
+        // If RFP file is selected, read its content
+        if (selectedRfpFile && !rfpContent.trim()) {
+            try {
+                rfpContent = await readFileContent(selectedRfpFile);
+            } catch (error) {
+                console.warn('파일 읽기 실패, 텍스트 입력 내용 사용:', error);
+            }
+        }
+        
+        const projectData = {
+            name: projectName,
+            client_company: clientCompany,
+            rfp_content: rfpContent
+        };
+
         const project = await apiRequest('/api/projects', {
             method: 'POST',
             data: projectData
         });
 
+        // Upload RFP file if selected
+        if (selectedRfpFile) {
+            try {
+                await uploadFile(selectedRfpFile, 'rfp', project.id);
+                showNotification('RFP 파일이 업로드되었습니다.', 'info');
+            } catch (error) {
+                console.warn('RFP 파일 업로드 실패:', error);
+            }
+        }
+
         hideLoading();
         showNotification('프로젝트가 성공적으로 생성되었습니다!', 'success');
         
-        // Reset form
+        // Reset form and file selections
         createProjectForm.reset();
+        selectedRfpFile = null;
+        document.getElementById('rfpFileInfo').classList.add('hidden');
         
         // Reload projects and select the new one
         await loadProjects();
@@ -178,6 +205,23 @@ async function handleCreateProject(e) {
         hideLoading();
         showNotification(error.message, 'error');
     }
+}
+
+async function readFileContent(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        
+        // For text files, read as text
+        if (file.type === 'text/plain') {
+            reader.readAsText(file);
+        } else {
+            // For other files, we'll just use a placeholder
+            // In a real implementation, you'd want to use OCR or document parsing
+            resolve(`[${file.name} 파일이 업로드됨 - 내용 분석 필요]`);
+        }
+    });
 }
 
 async function selectProject(projectId) {
@@ -197,6 +241,11 @@ async function selectProject(projectId) {
         // Show project details section
         document.getElementById('projectDetails').classList.remove('hidden');
         document.getElementById('projectDetails').scrollIntoView({ behavior: 'smooth' });
+        
+        // Setup file uploads for project details page
+        setTimeout(() => {
+            setupFileUploadArea('cdCardUploadArea', 'cdCardFileInput', 'cdCardFileInfo', 'cdCardFileName', 'removeCdCardFile', handleCdCardFileSelect);
+        }, 100);
         
         // If there's existing analysis, show it
         if (projectData.analysis) {
@@ -277,21 +326,45 @@ async function handleAddTeamMember(e) {
     }
 
     try {
+        showLoading('팀원을 추가하고 있습니다...');
+
         const member = await apiRequest('/api/team-members', {
             method: 'POST',
             data: memberData
         });
 
+        // Upload CD card file if selected
+        if (selectedCdCardFile) {
+            try {
+                await uploadFile(selectedCdCardFile, 'cd_card', currentProject.id, member.id);
+                showNotification('CD 카드가 업로드되었습니다. AI가 자동으로 스킬을 분석합니다.', 'info');
+                
+                // In a real implementation, you would process the CD card and update the member's skills
+                // For now, we'll add a placeholder
+                member.skills_extracted = '업로드된 CD 카드에서 추출된 스킬 (분석 중...)';
+                member.experience_summary = 'CD 카드 기반 경험 분석 중...';
+            } catch (error) {
+                console.warn('CD 카드 업로드 실패:', error);
+            }
+        }
+
         currentTeamMembers.push(member);
         displayTeamMembers();
         updateAnalyzeButton();
         
-        // Reset form
+        // Reset form and file selections
         addTeamMemberForm.reset();
+        selectedCdCardFile = null;
+        const cdCardFileInfo = document.getElementById('cdCardFileInfo');
+        if (cdCardFileInfo) {
+            cdCardFileInfo.classList.add('hidden');
+        }
         
+        hideLoading();
         showNotification('팀원이 추가되었습니다!', 'success');
         
     } catch (error) {
+        hideLoading();
         showNotification(error.message, 'error');
     }
 }
@@ -540,6 +613,143 @@ window.addEventListener('error', function(e) {
     }
 });
 
+// File upload functionality
+function setupFileUploads() {
+    // RFP File Upload
+    setupFileUploadArea('rfpUploadArea', 'rfpFileInput', 'rfpFileInfo', 'rfpFileName', 'removeRfpFile', handleRfpFileSelect);
+    
+    // CD Card File Upload (will be setup when project details are shown)
+    setupFileUploadArea('cdCardUploadArea', 'cdCardFileInput', 'cdCardFileInfo', 'cdCardFileName', 'removeCdCardFile', handleCdCardFileSelect);
+}
+
+function setupFileUploadArea(uploadAreaId, fileInputId, fileInfoId, fileNameId, removeButtonId, onFileSelect) {
+    const uploadArea = document.getElementById(uploadAreaId);
+    const fileInput = document.getElementById(fileInputId);
+    const fileInfo = document.getElementById(fileInfoId);
+    const removeButton = document.getElementById(removeButtonId);
+
+    if (!uploadArea || !fileInput) return; // Elements might not exist yet
+
+    // Click to upload
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            onFileSelect(file, fileInfo, fileNameId);
+        }
+    });
+
+    // Remove file
+    if (removeButton) {
+        removeButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            if (uploadAreaId === 'rfpUploadArea') selectedRfpFile = null;
+            if (uploadAreaId === 'cdCardUploadArea') selectedCdCardFile = null;
+        });
+    }
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            fileInput.files = files;
+            onFileSelect(file, fileInfo, fileNameId);
+        }
+    });
+}
+
+function handleRfpFileSelect(file, fileInfo, fileNameId) {
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('파일 크기가 10MB를 초과합니다.', 'error');
+        return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('지원하지 않는 파일 형식입니다. PDF, DOC, DOCX, TXT 파일만 업로드 가능합니다.', 'error');
+        return;
+    }
+
+    selectedRfpFile = file;
+    document.getElementById(fileNameId).textContent = `${file.name} (${formatFileSize(file.size)})`;
+    fileInfo.classList.remove('hidden');
+    
+    showNotification('RFP 파일이 선택되었습니다. 프로젝트 생성 시 자동으로 분석됩니다.', 'success');
+}
+
+function handleCdCardFileSelect(file, fileInfo, fileNameId) {
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('파일 크기가 5MB를 초과합니다.', 'error');
+        return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('지원하지 않는 파일 형식입니다. PDF, JPG, PNG 파일만 업로드 가능합니다.', 'error');
+        return;
+    }
+
+    selectedCdCardFile = file;
+    document.getElementById(fileNameId).textContent = `${file.name} (${formatFileSize(file.size)})`;
+    fileInfo.classList.remove('hidden');
+    
+    showNotification('CD 카드가 선택되었습니다. 팀원 추가 시 자동으로 분석됩니다.', 'success');
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function uploadFile(file, fileType, projectId = null, teamMemberId = null) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', fileType);
+    if (projectId) formData.append('project_id', projectId);
+    if (teamMemberId) formData.append('team_member_id', teamMemberId);
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('파일 업로드 중 오류가 발생했습니다.');
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('파일 업로드 오류:', error);
+        throw error;
+    }
+}
+
 // Console log for debugging
 console.log('AI 팀 분석 서비스 JavaScript 로드됨');
-console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석');
+console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드');

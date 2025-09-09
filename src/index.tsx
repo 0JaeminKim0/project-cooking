@@ -375,8 +375,29 @@ app.get('/', (c) => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">RFP 내용 (선택)</label>
                                 <textarea id="rfpContent" rows="4" 
-                                          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" 
-                                          placeholder="RFP 문서 내용을 입력하거나 파일을 업로드하세요..."></textarea>
+                                          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 mb-3" 
+                                          placeholder="RFP 문서 내용을 직접 입력하세요..."></textarea>
+                                
+                                <!-- File Upload Area for RFP -->
+                                <div class="file-upload-area" id="rfpUploadArea">
+                                    <input type="file" id="rfpFileInput" accept=".pdf,.doc,.docx,.txt" class="hidden">
+                                    <div class="text-center">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                                        <p class="text-gray-600 mb-2">RFP 문서 파일을 드래그하거나 클릭하여 업로드</p>
+                                        <p class="text-sm text-gray-500">지원 형식: PDF, DOC, DOCX, TXT (최대 10MB)</p>
+                                    </div>
+                                </div>
+                                <div id="rfpFileInfo" class="hidden mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-file-alt text-blue-600 mr-2"></i>
+                                            <span id="rfpFileName" class="text-blue-800"></span>
+                                        </div>
+                                        <button id="removeRfpFile" class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             <button type="submit" 
                                     class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
@@ -466,6 +487,31 @@ app.get('/', (c) => {
                                     <option value="ISTJ">ISTJ - 현실주의자</option>
                                 </select>
                             </div>
+                            
+                            <!-- CD Card Upload Area -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">CD 카드 (선택)</label>
+                                <div class="file-upload-area" id="cdCardUploadArea">
+                                    <input type="file" id="cdCardFileInput" accept=".pdf,.jpg,.jpeg,.png" class="hidden">
+                                    <div class="text-center">
+                                        <i class="fas fa-id-card text-3xl text-gray-400 mb-2"></i>
+                                        <p class="text-gray-600 mb-1">CD 카드를 업로드하면 자동으로 스킬과 경험을 분석합니다</p>
+                                        <p class="text-sm text-gray-500">지원 형식: PDF, JPG, PNG (최대 5MB)</p>
+                                    </div>
+                                </div>
+                                <div id="cdCardFileInfo" class="hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-id-card text-green-600 mr-2"></i>
+                                            <span id="cdCardFileName" class="text-green-800"></span>
+                                        </div>
+                                        <button id="removeCdCardFile" class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <button type="submit" 
                                     class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
                                 <i class="fas fa-user-plus mr-2"></i>
