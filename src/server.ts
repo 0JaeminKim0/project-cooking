@@ -100,10 +100,18 @@ const initializeDatabase = async () => {
         rfp_content TEXT,
         rfp_summary TEXT,
         requirements_analysis TEXT,
+        type TEXT DEFAULT 'real',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add type column to existing projects table if not exists
+    await runQuery(`
+      ALTER TABLE projects ADD COLUMN type TEXT DEFAULT 'real'
+    `).catch(() => {
+      // Column already exists, ignore error
+    });
 
     // Team members table
     await runQuery(`
@@ -242,7 +250,7 @@ class AIService {
     recommendations.push(`**${projectName} 팀 분석 결과**\n`);
     
     // 팀 구성 개요
-    recommendations.push(`**👥 팀 구성 개요 (총 ${teamMembers.length}명)**`);
+    recommendations.push(`**팀 구성 개요 (총 ${teamMembers.length}명)**`);
     teamMembers.forEach((member, index) => {
       recommendations.push(`${index + 1}. **${member.name}** (${member.role})`);
       recommendations.push(`   - MBTI: ${member.mbti}`);
@@ -253,23 +261,23 @@ class AIService {
     });
     
     // 팀원별 상세 분석
-    recommendations.push(`\n**🎯 팀원별 역할 및 기여 방안**`);
+    recommendations.push(`\n**팀원별 역할 및 기여 방안**`);
     
     teamMembers.forEach((member, index) => {
       const memberAnalysis = this.analyzeMemberContribution(member, projectContent, requirements);
       recommendations.push(`\n**${index + 1}. ${member.name} (${member.role})**`);
-      recommendations.push(memberAnalysis.strengths);
-      recommendations.push(memberAnalysis.considerations);
-      recommendations.push(memberAnalysis.recommendations);
+      recommendations.push(memberAnalysis.strengths + '\n');
+      recommendations.push(memberAnalysis.considerations + '\n');
+      recommendations.push(memberAnalysis.recommendations + '\n');
     });
 
     // 전체 팀 시너지 분석
-    recommendations.push(`\n**⚡ 팀 시너지 및 협업 방안**`);
+    recommendations.push(`\n**팀 시너지 및 협업 방안**`);
     const teamSynergy = this.analyzeTeamSynergy(teamMembers, projectContent);
     recommendations.push(teamSynergy);
 
     // 프로젝트 성공을 위한 핵심 제안사항
-    recommendations.push(`\n**🚀 프로젝트 성공을 위한 핵심 제안사항**`);
+    recommendations.push(`\n**프로젝트 성공을 위한 핵심 제안사항**`);
     const successFactors = this.generateSuccessFactors(projectName, teamMembers);
     recommendations.push(successFactors);
 
@@ -280,9 +288,9 @@ class AIService {
     const role = member.role;
     const mbti = member.mbti;
     
-    let strengths = `**✅ 주요 강점:**`;
-    let considerations = `**⚠️ 유의사항:**`;
-    let recommendations = `**💡 역할 제안:**`;
+    let strengths = `**주요 강점:**`;
+    let considerations = `**유의사항:**`;
+    let recommendations = `**역할 제안:**`;
 
     // 역할별 분석
     if (role.includes('전략') || role.includes('경영')) {
@@ -387,78 +395,82 @@ class AIService {
   private generateProjectSpecificLearning(projectName: string, requirements: string[]): string {
     const learning: string[] = [];
     
-    learning.push(`**${projectName} 전문성 강화 학습 로드맵**\n`);
+    learning.push(`**${projectName} Industry 전문성 강화 로드맵**\n`);
 
-    // 프로젝트별 맞춤 학습 계획
+    // 프로젝트별 맞춤 Industry 지식 및 학습 계획
     if (projectName.includes('디지털 전환') || projectName.includes('DX')) {
-      learning.push("**🎯 디지털 전환 핵심 역량**");
-      learning.push("• **전략 수립**: 'Digital Transformation Strategy' - MIT Sloan (8주)");
-      learning.push("• **기술 이해**: 'Industry 4.0 Technologies' - Coursera Specialization");
-      learning.push("• **변화관리**: 'Leading Digital Transformation' - Harvard Business School Online");
-      learning.push("• **데이터 활용**: 'Data-Driven Decision Making' - Google Analytics Academy");
+      learning.push("**디지털 전환 Industry 핵심 역량**");
+      learning.push("• **산업별 DX 트렌드**: 제조, 금융, 리테일 등 업계별 디지털 혁신 사례 분석");
+      learning.push("• **주요 기술 동향**: AI, IoT, 빅데이터, 클라우드 등 주요 기술의 비즈니스 적용 방안");
+      learning.push("• **규제 환경**: 데이터 보호법, 사이버보안 등 디지털 전환 시 고려사항");
+      learning.push("• **ROI 측정**: 디지털 투자 대비 효과 측정 방법론 및 KPI 체계");
       
-      learning.push("\n**📚 필수 도서 및 케이스**");
-      learning.push("• 'Platform Revolution' - Geoffrey Parker (플랫폼 전략)");
-      learning.push("• 'The Technology Fallacy' - MIT 저자들 (디지털 전환 성공사례)");
-      learning.push("• GE, 지멘스 등 제조업 디지털 전환 케이스 스터디");
+      learning.push("\n**실무 필수 정보 및 자료**");
+      learning.push("• McKinsey Digital, Deloitte Digital 등 글로벌 컸설팅사 DX 리포트");
+      learning.push("• 삼성SDS, LG CNS 등 국내 IT 서비스 기업 디지털 전환 케이스");
+      learning.push("• 한국디지털기업협회, 정보통신정책연구원 연구보고서");
       
-      learning.push("\n**🏆 관련 자격증**");
-      learning.push("• Certified Digital Transformation Professional (CDTP)");
-      learning.push("• AWS/Azure Cloud Architect (클라우드 전략 이해)");
+      learning.push("\n**전문 자격증 및 인증**");
+      learning.push("• 디지털혁신전문가(DT) - 한국디지털기업협회");
+      learning.push("• AWS/Azure Cloud Architect - 클라우드 전략 및 비용 최적화 역량");
+      learning.push("• Data Analyst Associate (Microsoft/Google) - 데이터 기반 의사결정 역량");
       
     } else if (projectName.includes('ESG')) {
-      learning.push("**🎯 ESG 경영 핵심 역량**");
-      learning.push("• **ESG 전략**: 'ESG Strategic Management' - Wharton Executive Program");
-      learning.push("• **지속가능금융**: 'Sustainable Finance' - Cambridge Judge Business School");
-      learning.push("• **탄소회계**: 'Carbon Accounting and Management' - Edinburgh Business School");
-      learning.push("• **사회적 임팩트**: 'Measuring Social Impact' - Acumen Academy");
+      learning.push("**ESG 경영 Industry 핵심 역량**");
+      learning.push("• **ESG 평가 체계**: K-ESG, MSCI ESG 등 주요 평가기관 기준 및 평가 방법론");
+      learning.push("• **규제 대응**: 지속가능경영보고서, 탄소중립 선언 등 의무공시 사항");
+      learning.push("• **업계별 이슈**: 금융, 에너지, 제조업 등 업계별 ESG 리스크 및 기회 요인");
+      learning.push("• **이해관계자 관리**: 투자자, 소비자, 지역사회 등 다양한 ESG 이해관계자 대응법");
       
-      learning.push("\n**📚 필수 가이드라인 학습**");
-      learning.push("• SASB Standards (지속가능회계기준위원회)");
-      learning.push("• TCFD Recommendations (기후변화 재무정보공개 태스크포스)");
-      learning.push("• UN SDGs Implementation Guide");
+      learning.push("\n**필수 가이드라인 및 Industry 리포트**");
+      learning.push("• 한국거래소 K-ESG 가이드라인 및 평가 사례");
+      learning.push("• TCFD, SASB 등 글로벌 ESG 공시 표준 및 국내 적용 방안");
+      learning.push("• 삼성, LG, SK 등 국내 대기업 ESG 경영 사례 분석");
+      learning.push("• 환경부, 금융위원회 등 정부 ESG 정책 동향");
       
-      learning.push("\n**🏆 관련 자격증**");
-      learning.push("• Certificate in ESG Investing (CFA Institute)");
-      learning.push("• Sustainability Professional Certification (GRI)");
+      learning.push("\n**전문 자격증 및 인증**");
+      learning.push("• ESG전문가 자격증 - 한국사회책임투자포럼");
+      learning.push("• 지속가능경영전문가(CSM) - 한국표준협회");
+      learning.push("• 탄소경영전문가 - 탄소중립녀업형획단");
       
     } else if (projectName.includes('투자유치') || projectName.includes('스타트업')) {
-      learning.push("**🎯 투자유치 핵심 역량**");
-      learning.push("• **투자 전략**: 'Venture Capital and Private Equity' - Wharton/Kellogg");
-      learning.push("• **재무모델링**: 'Financial Modeling for Startups' - 실무 워크샵");
-      learning.push("• **밸류에이션**: 'Company Valuation Methods' - NYU Stern");
-      learning.push("• **IR 전략**: 'Investor Relations Best Practices' - IR Society");
+      learning.push("**투자유치 Industry 핵심 역량**");
+      learning.push("• **투자시장 동향**: 국내외 VC, PE 투자 트렌드 및 업계별 투자 선호도");
+      learning.push("• **밸류에이션 실무**: DCF, Comparable, Precedent Transaction 등 투자 실무 모델링");
+      learning.push("• **Due Diligence**: 재무, 운영, 시장, 기술 등 영역별 DD 체크리스트");
+      learning.push("• **IR 전략**: Pitch Deck 구성, 투자자 타겟팅, 로드쇼 전략");
       
-      learning.push("\n**📚 필수 도서 및 리소스**");
-      learning.push("• 'Venture Deals' - Brad Feld & Jason Mendelson");
-      learning.push("• 'The Hard Thing About Hard Things' - Ben Horowitz");
-      learning.push("• Y Combinator Startup School (온라인 무료)");
-      learning.push("• 500 Startups Accelerator 프로그램 케이스");
+      learning.push("\n**Industry 리포트 및 데이터**");
+      learning.push("• 한국벤처투자협회(KVCA) 연간 투자 동향 보고서");
+      learning.push("• 중소벤처기업부 스타트업 투자 지원 사업 현황");
+      learning.push("• Startup Ranking, TheVC 등 국내 스타트업 데이터베이스");
+      learning.push("• PwC MoneyTree, CB Insights 등 글로벌 투자 데이터");
       
-      learning.push("\n**🏆 관련 자격증**");
-      learning.push("• Chartered Financial Analyst (CFA)");
-      learning.push("• Financial Risk Manager (FRM)");
+      learning.push("\n**전문 자격증 및 인증**");
+      learning.push("• 공인회계사(CPA) - 재무제표 분석 및 감사 역량");
+      learning.push("• 투자상담사 - 금융투자협회 인증 자격증");
+      learning.push("• Chartered Financial Analyst (CFA) - 글로벌 금융분석 전문 자격");
     }
 
     // 공통 역량 강화
-    learning.push("\n**💼 컨설턴트 공통 역량 강화**");
-    learning.push("• **프레젠테이션**: 'Executive Presentation Skills' - Dale Carnegie");
-    learning.push("• **프로젝트 관리**: PMP (Project Management Professional) 자격증");
-    learning.push("• **데이터 분석**: 'Data Analysis with Excel/Tableau' - 실무 과정");
-    learning.push("• **비즈니스 영어**: 'Business English for Consultants' - 온라인 과정");
+    learning.push("\n**컨설턴트 공통 역량 강화**");
+    learning.push("• **비즈니스 커뮤니케이션**: 고객사 임원 대상 효과적 보고서 작성 및 프레젠테이션");
+    learning.push("• **프로젝트 관리**: PMP/Agile 방법론 기반 대규모 프로젝트 실행 경험");
+    learning.push("• **데이터 인사이트**: 엑셀, 파이썬, SQL 활용 비즈니스 데이터 분석 능력");
+    learning.push("• **비즈니스 영어**: 글로벌 클라이언트 대상 컸설팅 영어 커뮤니케이션");
 
     // 학습 일정 및 방법
-    learning.push("\n**📅 권장 학습 일정**");
-    learning.push("• **1개월차**: 기초 이론 및 프레임워크 학습");
-    learning.push("• **2개월차**: 케이스 스터디 분석 및 토론");
-    learning.push("• **3개월차**: 실무 프로젝트 적용 및 피드백");
-    learning.push("• **지속**: 월 1회 업계 동향 세미나 및 네트워킹");
+    learning.push("\n**권장 학습 일정**");
+    learning.push("• **1개월차**: Industry 기초 지식 및 마켓 트렌드 학습");
+    learning.push("• **2개월차**: 실제 컸설팅 케이스 분석 및 벤치마킹");
+    learning.push("• **3개월차**: 실무 프로젝트 적용 및 고객 피드백 수렴");
+    learning.push("• **지속 역량 개발**: 월 1회 업계 전문가 네트워킹 및 컴퍼런스 참석");
 
-    learning.push("\n**🎓 학습 방법 제안**");
-    learning.push("• **이론 학습**: 온라인 강의 + 도서 스터디 (주 5시간)");
-    learning.push("• **실무 적용**: 팀 내 케이스 워크샵 (주 1회)");
-    learning.push("• **네트워킹**: 업계 세미나 및 전문가 멘토링 (월 1회)");
-    learning.push("• **인증**: 관련 자격증 취득으로 전문성 객관화");
+    learning.push("\n**학습 방법 제안**");
+    learning.push("• **Industry 리서치**: 주간 업계 리포트 및 뉴스 모니터링 (2-3시간)");
+    learning.push("• **실무 스킬**: 대고객 프로젝트 시뮤레이션 및 워크샵 (주 1회)");
+    learning.push("• **네트워킹**: 업계 전문가 멘토링 및 컴퍼런스 네트워킹 (월 1회)");
+    learning.push("• **역량 입증**: 관련 자격증 취득 및 업계 인증 프로그램 이수");
 
     return learning.join('\n');
   }
@@ -535,25 +547,28 @@ ${teamInfo}
 
 위 정보를 바탕으로 다음과 같은 형식으로 상세한 팀 분석 보고서를 작성해주세요:
 
-## 📊 ${projectName} 팀 분석 보고서
+## ${projectName} 팀 분석 보고서
 
-### 🎯 전체 팀 구성 분석
+### 전체 팀 구성 분석
 (팀의 전반적인 강점과 특징을 2-3문장으로 서술)
 
-### 👥 팀원별 상세 분석
+### 팀원별 상세 분석
 
 각 팀원에 대해 다음 형식으로 작성:
 
 **1. [이름] ([역할])**
 - **핵심 강점**: (구체적인 기여 방안과 함께 2-3문장)
-- **주의할 점**: (잠재적 리스크나 보완이 필요한 부분을 1-2문장)  
+\n
+- **주의할 점**: (잠재적 리스크나 보완이 필요한 부분을 1-2문장)
+\n  
 - **권장 역할**: (프로젝트에서의 최적 포지션과 책임을 구체적으로 제시)
+\n
 - **협업 방안**: (다른 팀원들과의 효과적 협력 방법)
-
-### ⚡ 팀 시너지 극대화 전략
+\n
+### 팀 시너지 극대화 전략
 (팀 전체의 협업을 위한 구체적이고 실행 가능한 방안들)
 
-### 🚀 프로젝트 성공을 위한 핵심 제언
+### 프로젝트 성공을 위한 핵심 제언
 (이 프로젝트의 성공을 위해 반드시 고려해야 할 핵심 사항들)
 
 자연스럽고 전문적인 한국어로 작성하되, 구체적인 예시와 실무적 조언을 풍부하게 포함해주세요.
@@ -571,41 +586,54 @@ ${teamInfo}
 필요 역량: ${requirements.join(', ')}
 팀 구성 역할: ${roles}
 
-위 프로젝트를 성공적으로 수행하기 위한 맞춤형 학습 계획을 다음 형식으로 작성해주세요:
+위 프로젝트를 성공적으로 수행하기 위한 실무 중심의 Industry 전문 정보와 학습 로드맵을 다음 형식으로 작성해주세요:
 
-## 📚 ${projectName} 전문성 강화 학습 로드맵
+## ${projectName} Industry 전문성 강화 로드맵
 
-### 🎯 프로젝트 핵심 역량 개발
+### 프로젝트 핵심 역량 개발
 
-#### 1차: 기초 역량 강화 (1-2개월)
-(프로젝트 수행에 필수적인 기초 지식과 스킬)
-- 구체적인 온라인 강의나 도서 추천
-- 각각에 대한 간단한 설명과 학습 포인트
+#### 1차: 기초 Industry 지식 습득 (1-2개월)
+- 해당 산업군의 주요 트렌드와 시장 현황
+- 업계 선도 기업들의 베스트 프랙티스
+- 규제 환경 및 compliance 요구사항
+- 핵심 KPI 및 성과지표 체계
 
-#### 2차: 실무 역량 심화 (2-3개월) 
-(실제 프로젝트 적용 가능한 고급 스킬)
-- 실무 워크샵이나 케이스 스터디 과정
-- 업계 전문가 멘토링 프로그램
+#### 2차: 실무 역량 심화 (2-3개월)
+- 실제 프로젝트 케이스 스터디 분석
+- 업계 전문가 네트워크 구축
+- 관련 솔루션 및 도구 활용법
+- 고객사별 특성 및 니즈 분석법
 
 #### 3차: 전문가 수준 도달 (3-6개월)
-(해당 분야 전문가로 성장하기 위한 심화 과정)
-- 관련 자격증이나 인증 프로그램
-- 국제적으로 인정받는 교육 과정
+- 업계 컨퍼런스 및 세미나 참석
+- 전문 자격증 취득
+- 사내 전문가 멘토링
+- 실무 프로젝트 리딩 경험
 
-### 📖 필수 도서 및 자료
-(각 도서의 핵심 내용과 프로젝트 적용 방안 포함)
+### Industry 필수 정보 및 자료
+- 업계 주요 리포트 및 백서
+- 규제기관 가이드라인 및 정책 문서
+- 선도기업 IR 자료 및 사업보고서
+- 업계 전문 매체 및 뉴스레터
 
-### 🏆 권장 자격증 및 인증
-(취득 시 프로젝트에 미치는 구체적 효과 설명)
+### 전문 자격증 및 인증
+- 해당 분야 국제 인증 프로그램
+- 국내외 전문기관 자격증
+- 업계 협회 인증 과정
 
-### 💡 실무 적용 방안
-(학습한 내용을 실제 프로젝트에 어떻게 적용할지 구체적 방법론)
+### 실무 적용 방안
+- 프로젝트 단계별 적용 체크리스트
+- 고객 커뮤니케이션 시 활용 포인트
+- 제안서 작성 시 차별화 요소
 
-### 📅 단계별 학습 일정 제안
-(현실적이고 실행 가능한 월별/주별 학습 계획)
+### 단계별 실행 일정
+- 월별 목표 설정 및 달성 지표
+- 주간 학습 계획 및 점검 방법
+- 분기별 역량 평가 및 피드백 체계
 
-실무에서 바로 활용 가능하도록 구체적이고 상세하게 작성해주세요.
-각 추천 항목에는 왜 필요한지, 어떤 효과가 있는지도 함께 설명해주세요.
+실제 Industry에서 요구되는 전문 지식과 실무 역량을 중심으로 구체적이고 실행 가능하게 작성해주세요.
+각 항목은 실제 프로젝트 수행 시 어떻게 활용되는지, 고객사에게 어떤 가치를 제공하는지도 함께 설명해주세요.
+특히 해당 업계의 최신 동향, 주요 이슈, 성공 사례를 포함하여 실무진이 즉시 활용할 수 있도록 작성해주세요.
 `;
 
     return await this.callLLM(prompt);
@@ -996,7 +1024,23 @@ app.use('/static/*', serveStatic({
 // API Routes
 app.get('/api/projects', async (c) => {
   try {
-    const projects = await allQuery('SELECT * FROM projects ORDER BY created_at DESC');
+    const mode = c.req.query('mode'); // 'demo', 'real', or undefined (all)
+    
+    let query = 'SELECT * FROM projects';
+    let params: any[] = [];
+    
+    if (mode === 'demo') {
+      query += ' WHERE type = ?';
+      params.push('demo');
+    } else if (mode === 'real') {
+      query += ' WHERE type = ?';  
+      params.push('real');
+    }
+    // mode가 없으면 전체 조회
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const projects = await allQuery(query, params);
     return c.json(projects);
   } catch (error) {
     console.error('프로젝트 조회 오류:', error);
@@ -1009,8 +1053,8 @@ app.post('/api/projects', async (c) => {
     const body = await c.req.json();
     
     const result = await runQuery(
-      'INSERT INTO projects (name, client_company, rfp_content) VALUES (?, ?, ?)',
-      [body.name, body.client_company || null, body.rfp_content || null]
+      'INSERT INTO projects (name, client_company, rfp_content, type) VALUES (?, ?, ?, ?)',
+      [body.name, body.client_company || null, body.rfp_content || null, 'real']
     );
 
     const projectId = result.lastID;
@@ -1265,13 +1309,14 @@ app.post('/api/demo/generate', async (c) => {
       const project = sampleProjects[i];
       
       const projectResult = await runQuery(
-        'INSERT INTO projects (name, client_company, rfp_content, rfp_summary, requirements_analysis) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO projects (name, client_company, rfp_content, rfp_summary, requirements_analysis, type) VALUES (?, ?, ?, ?, ?, ?)',
         [
           project.name,
           project.client_company,
           project.rfp_content,
           project.rfp_content.split('\n')[0] + '...',
-          JSON.stringify(project.requirements)
+          JSON.stringify(project.requirements),
+          'demo'
         ]
       );
 
@@ -1310,24 +1355,56 @@ app.post('/api/demo/generate', async (c) => {
   }
 });
 
-// Reset demo data endpoint
+// Reset demo data endpoint  
 app.delete('/api/demo/reset', async (c) => {
   try {
-    await runQuery('DELETE FROM analysis_results');
-    await runQuery('DELETE FROM uploaded_files'); 
-    await runQuery('DELETE FROM team_members');
-    await runQuery('DELETE FROM projects');
+    // Get demo project IDs
+    const demoProjects = await allQuery('SELECT id FROM projects WHERE type = ?', ['demo']);
+    const demoProjectIds = demoProjects.map((p: any) => p.id);
     
-    await runQuery('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "projects"');
-    await runQuery('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "team_members"');
-    await runQuery('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "analysis_results"');
-    await runQuery('UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = "uploaded_files"');
+    if (demoProjectIds.length > 0) {
+      // Delete related data for demo projects only
+      const placeholders = demoProjectIds.map(() => '?').join(',');
+      await runQuery(`DELETE FROM analysis_results WHERE project_id IN (${placeholders})`, demoProjectIds);
+      await runQuery(`DELETE FROM team_members WHERE project_id IN (${placeholders})`, demoProjectIds);
+      
+      // Delete demo projects
+      await runQuery('DELETE FROM projects WHERE type = ?', ['demo']);
+    }
     
-    return c.json({ message: '데모 데이터가 초기화되었습니다.' });
+    return c.json({ 
+      message: '데모 데이터가 초기화되었습니다.',
+      deleted_projects: demoProjectIds.length 
+    });
     
   } catch (error) {
     console.error('데모 데이터 초기화 오류:', error);
-    return c.json({ error: '데이터 초기화 중 오류가 발생했습니다.' }, 500);
+    return c.json({ error: '데모 데이터 초기화 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// Fix existing projects type
+app.post('/api/fix-project-types', async (c) => {
+  try {
+    // Set existing projects with emoji names as demo
+    await runQuery(`
+      UPDATE projects 
+      SET type = 'demo' 
+      WHERE (name LIKE '%📊%' OR name LIKE '%🏦%' OR name LIKE '%🚀%') AND type IS NULL
+    `);
+    
+    // Set remaining null types as real
+    await runQuery(`
+      UPDATE projects 
+      SET type = 'real' 
+      WHERE type IS NULL
+    `);
+    
+    return c.json({ message: 'Project types fixed successfully' });
+    
+  } catch (error) {
+    console.error('Fix project types error:', error);
+    return c.json({ error: 'Failed to fix project types' }, 500);
   }
 });
 
@@ -1354,9 +1431,21 @@ app.get('/', (c) => {
                         <i class="fas fa-users-gear text-2xl text-blue-600"></i>
                         <h1 class="text-2xl font-bold text-gray-800">AI 팀 분석 서비스</h1>
                     </div>
-                    <div class="text-sm text-gray-600">
-                        <i class="fas fa-robot mr-1"></i>
-                        Railway 배포 버전
+                    <div class="flex items-center space-x-6">
+                        <!-- Demo Mode Toggle -->
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-600">실제 모드</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="demoModeToggle" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                            <span class="text-sm text-gray-600">Demo 모드</span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-robot mr-1"></i>
+                            Railway 배포 버전
+                        </div>
                     </div>
                 </div>
             </div>

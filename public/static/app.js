@@ -5,6 +5,7 @@ let radarChartInstance = null;
 let coverageChartInstance = null;
 let selectedRfpFile = null;
 let selectedCdCardFile = null;
+let isDemoMode = false;
 
 // DOM elements
 const createProjectForm = document.getElementById('createProjectForm');
@@ -15,6 +16,7 @@ const teamMembersList = document.getElementById('teamMembersList');
 const analyzeTeamBtn = document.getElementById('analyzeTeamBtn');
 const analysisResults = document.getElementById('analysisResults');
 const backToProjectsBtn = document.getElementById('backToProjects');
+const demoModeToggle = document.getElementById('demoModeToggle');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,6 +31,9 @@ function setupEventListeners() {
     addTeamMemberForm.addEventListener('submit', handleAddTeamMember);
     analyzeTeamBtn.addEventListener('click', handleAnalyzeTeam);
     backToProjectsBtn.addEventListener('click', backToProjectList);
+    
+    // Demo mode toggle
+    demoModeToggle.addEventListener('change', handleDemoModeToggle);
     
     // Demo test buttons
     document.getElementById('demoTestBtn').addEventListener('click', handleDemoTest);
@@ -109,8 +114,10 @@ async function apiRequest(url, options = {}) {
 // Project management
 async function loadProjects() {
     try {
-        const projects = await apiRequest('/api/projects');
+        const mode = isDemoMode ? 'demo' : 'real';
+        const projects = await apiRequest(`/api/projects?mode=${mode}`);
         displayProjects(projects);
+        updateModeIndicator();
     } catch (error) {
         console.error('프로젝트 로드 실패:', error);
         showNotification('프로젝트를 불러오는데 실패했습니다.', 'error');
@@ -926,6 +933,81 @@ async function quickAnalyzeProject(projectId) {
     }
 }
 
+// Demo Mode Functions
+function handleDemoModeToggle() {
+    isDemoMode = demoModeToggle.checked;
+    console.log('Demo Mode:', isDemoMode ? 'ON' : 'OFF');
+    
+    // Reload projects with new mode
+    loadProjects();
+    
+    // Update UI elements
+    updateModeIndicator();
+    
+    // Show notification
+    showNotification(
+        isDemoMode ? 
+        '🎭 Demo 모드가 활성화되었습니다. Demo 프로젝트만 표시됩니다.' : 
+        '💼 실제 모드가 활성화되었습니다. 실제 프로젝트만 표시됩니다.',
+        'info'
+    );
+}
+
+function updateModeIndicator() {
+    const modeText = isDemoMode ? 'Demo 모드' : '실제 모드';
+    const modeColor = isDemoMode ? 'text-purple-600' : 'text-blue-600';
+    
+    // Update any mode indicators in the UI
+    const indicators = document.querySelectorAll('.mode-indicator');
+    indicators.forEach(indicator => {
+        indicator.textContent = modeText;
+        indicator.className = `mode-indicator ${modeColor} font-medium`;
+    });
+    
+    // Update project creation form visibility
+    const createSection = document.querySelector('.bg-white.rounded-lg.shadow-lg');
+    if (createSection) {
+        createSection.style.display = isDemoMode ? 'none' : 'block';
+    }
+    
+    // Update demo buttons visibility
+    const demoButtons = document.querySelector('.flex.justify-center.space-x-4.mb-8');
+    if (demoButtons) {
+        demoButtons.style.display = isDemoMode ? 'flex' : 'none';
+    }
+}
+
+// Initialize demo mode based on URL parameter or localStorage
+function initializeDemoMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const demoParam = urlParams.get('demo');
+    const savedMode = localStorage.getItem('demoMode');
+    
+    if (demoParam === 'true' || savedMode === 'true') {
+        isDemoMode = true;
+        demoModeToggle.checked = true;
+    }
+    
+    updateModeIndicator();
+}
+
+// Save demo mode preference
+function saveDemoModePreference() {
+    localStorage.setItem('demoMode', isDemoMode.toString());
+}
+
+// Override loadProjects to save preference
+const originalLoadProjects = loadProjects;
+loadProjects = async function() {
+    saveDemoModePreference();
+    return await originalLoadProjects();
+};
+
 // Console log for debugging
 console.log('AI 팀 분석 서비스 JavaScript 로드됨');
-console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트');
+console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트, Demo Mode Toggle');
+
+// Initialize demo mode on page load
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initializeDemoMode, 100); // Slight delay to ensure DOM is ready
+});
