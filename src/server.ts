@@ -730,35 +730,60 @@ app.get('/', (c) => {
                 </div>
             </div>
 
+            <!-- 실제 프로젝트 생성 섹션 -->
             <div class="bg-white rounded-lg shadow-lg p-8">
                 <h3 class="text-2xl font-bold text-gray-800 mb-6">
-                    <i class="fas fa-rocket mr-2 text-green-600"></i>
-                    Railway 배포 완료!
+                    <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
+                    새 프로젝트 생성
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-green-50 p-6 rounded-lg">
-                        <h4 class="text-lg font-semibold text-green-800 mb-3">
-                            ✅ 배포 성공
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 프로젝트 기본 정보 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            📋 프로젝트 정보
                         </h4>
-                        <ul class="text-green-700 space-y-1">
-                            <li>• Node.js + SQLite 서버 구동</li>
-                            <li>• API 엔드포인트 정상 작동</li>
-                            <li>• 데이터베이스 초기화 완료</li>
-                            <li>• 데모 테스트 기능 활성화</li>
-                        </ul>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트명</label>
+                                <input type="text" id="projectName" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="예: AI 챗봇 플랫폼 구축">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">고객사명</label>
+                                <input type="text" id="clientCompany" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="예: TechFlow Corp">
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-blue-50 p-6 rounded-lg">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-3">
-                            🚀 시작하기
+                    
+                    <!-- RFP 내용 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            📄 RFP 내용
                         </h4>
-                        <p class="text-blue-700 mb-4">
-                            "Demo Test 시작하기" 버튼을 클릭하여<br>
-                            AI 팀 분석 서비스를 체험해보세요!
-                        </p>
-                        <button onclick="document.getElementById('demoTestBtn').click()" 
-                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                            데모 시작
-                        </button>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 요구사항</label>
+                                <textarea id="rfpContent" rows="6"
+                                         class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                         placeholder="프로젝트의 주요 요구사항, 기술 스택, 기능을 입력하세요...
+
+예:
+- GPT-4 기반 자연어 처리
+- React 기반 프론트엔드
+- Node.js 백엔드 API
+- 실시간 채팅 기능
+- AWS 클라우드 배포"></textarea>
+                            </div>
+                            <button id="createProjectBtn" 
+                                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-magic mr-2"></i>
+                                프로젝트 생성 및 AI 분석
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -787,6 +812,97 @@ app.get('/', (c) => {
                 </h3>
                 <div id="projectDetailsContent">
                     <!-- 프로젝트 상세 내용이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+            
+            <!-- 팀원 추가 섹션 -->
+            <div id="addTeamMemberSection" class="hidden mt-8 bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-user-plus mr-2 text-purple-600"></i>
+                    팀원 추가
+                </h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 팀원 기본 정보 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            👤 기본 정보
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                                <input type="text" id="memberName" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="예: 김지훈">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">역할</label>
+                                <select id="memberRole" 
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    <option value="">역할을 선택하세요</option>
+                                    <option value="AI Engineer">AI Engineer</option>
+                                    <option value="Frontend Developer">Frontend Developer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Mobile Developer">Mobile Developer</option>
+                                    <option value="DevOps Engineer">DevOps Engineer</option>
+                                    <option value="UI/UX Designer">UI/UX Designer</option>
+                                    <option value="Data Scientist">Data Scientist</option>
+                                    <option value="Product Manager">Product Manager</option>
+                                    <option value="QA Engineer">QA Engineer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">MBTI</label>
+                                <select id="memberMbti" 
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    <option value="">MBTI를 선택하세요</option>
+                                    <option value="INTJ">INTJ - 건축가</option>
+                                    <option value="INTP">INTP - 논리술사</option>
+                                    <option value="ENTJ">ENTJ - 통솔자</option>
+                                    <option value="ENTP">ENTP - 변론가</option>
+                                    <option value="INFJ">INFJ - 옹호자</option>
+                                    <option value="INFP">INFP - 중재자</option>
+                                    <option value="ENFJ">ENFJ - 선도자</option>
+                                    <option value="ENFP">ENFP - 활동가</option>
+                                    <option value="ISTJ">ISTJ - 현실주의자</option>
+                                    <option value="ISFJ">ISFJ - 수호자</option>
+                                    <option value="ESTJ">ESTJ - 경영자</option>
+                                    <option value="ESFJ">ESFJ - 집정관</option>
+                                    <option value="ISTP">ISTP - 만능재주꾼</option>
+                                    <option value="ISFP">ISFP - 모험가</option>
+                                    <option value="ESTP">ESTP - 사업가</option>
+                                    <option value="ESFP">ESFP - 연예인</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 스킬 및 경험 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                            🛠️ 스킬 & 경험
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">주요 스킬</label>
+                                <input type="text" id="memberSkills" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                       placeholder="예: Python, TensorFlow, NLP, GPT API, 머신러닝">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">경험 요약</label>
+                                <textarea id="memberExperience" rows="4"
+                                         class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                         placeholder="예: 5년 AI 개발 경험, 챗봇 프로젝트 3건 리드"></textarea>
+                            </div>
+                            <button id="addMemberBtn" 
+                                    class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                팀원 추가하기
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -848,6 +964,10 @@ app.get('/', (c) => {
                     const response = await axios.get('/api/projects');
                     currentProjects = response.data;
                     displayProjects(currentProjects);
+                    
+                    // Hide team member addition section
+                    document.getElementById('addTeamMemberSection').classList.add('hidden');
+                    document.getElementById('projectDetails').classList.add('hidden');
                 } catch (error) {
                     console.error('프로젝트 로드 실패:', error);
                     showNotification('프로젝트를 불러오는데 실패했습니다.', 'error');
@@ -917,6 +1037,9 @@ app.get('/', (c) => {
                     
                     hideLoading();
                     showProjectDetails(currentProject, currentTeamMembers, projectData.analysis);
+                    
+                    // Show team member addition section
+                    document.getElementById('addTeamMemberSection').classList.remove('hidden');
                     
                 } catch (error) {
                     hideLoading();
@@ -1111,6 +1234,96 @@ app.get('/', (c) => {
                         hideLoading();
                         showNotification('데이터 초기화 중 오류가 발생했습니다: ' + error.message, 'error');
                     }
+                }
+            });
+
+            // Real project creation functionality
+            document.getElementById('createProjectBtn').addEventListener('click', async () => {
+                const projectName = document.getElementById('projectName').value.trim();
+                const clientCompany = document.getElementById('clientCompany').value.trim();
+                const rfpContent = document.getElementById('rfpContent').value.trim();
+
+                if (!projectName) {
+                    showNotification('프로젝트명을 입력해주세요.', 'error');
+                    return;
+                }
+
+                if (!rfpContent) {
+                    showNotification('RFP 내용을 입력해주세요.', 'error');
+                    return;
+                }
+
+                try {
+                    showLoading('프로젝트를 생성하고 AI 분석을 진행하고 있습니다...');
+                    
+                    const response = await axios.post('/api/projects', {
+                        name: projectName,
+                        client_company: clientCompany,
+                        rfp_content: rfpContent
+                    });
+
+                    // Clear form
+                    document.getElementById('projectName').value = '';
+                    document.getElementById('clientCompany').value = '';
+                    document.getElementById('rfpContent').value = '';
+
+                    // Reload projects
+                    await loadProjects();
+                    
+                    hideLoading();
+                    showNotification('✅ 프로젝트가 성공적으로 생성되었습니다!\\n\\n프로젝트 목록에서 생성된 프로젝트를 클릭하여 팀원을 추가하세요.', 'success');
+
+                } catch (error) {
+                    hideLoading();
+                    showNotification('프로젝트 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+                }
+            });
+
+            // Team member addition functionality
+            document.getElementById('addMemberBtn').addEventListener('click', async () => {
+                if (!currentProject) {
+                    showNotification('먼저 프로젝트를 선택해주세요.', 'error');
+                    return;
+                }
+
+                const name = document.getElementById('memberName').value.trim();
+                const role = document.getElementById('memberRole').value;
+                const mbti = document.getElementById('memberMbti').value;
+                const skills = document.getElementById('memberSkills').value.trim();
+                const experience = document.getElementById('memberExperience').value.trim();
+
+                if (!name || !role || !mbti) {
+                    showNotification('이름, 역할, MBTI는 필수 항목입니다.', 'error');
+                    return;
+                }
+
+                try {
+                    showLoading('팀원을 추가하고 있습니다...');
+                    
+                    const response = await axios.post('/api/team-members', {
+                        project_id: currentProject.id,
+                        name: name,
+                        role: role,
+                        mbti: mbti,
+                        cd_card_content: skills + '\\n' + experience
+                    });
+
+                    // Clear form
+                    document.getElementById('memberName').value = '';
+                    document.getElementById('memberRole').value = '';
+                    document.getElementById('memberMbti').value = '';
+                    document.getElementById('memberSkills').value = '';
+                    document.getElementById('memberExperience').value = '';
+
+                    // Reload project details
+                    await selectProject(currentProject.id);
+                    
+                    hideLoading();
+                    showNotification('✅ 팀원이 성공적으로 추가되었습니다!\\n\\n팀 구성이 완료되면 "AI 팀 분석 시작" 버튼을 클릭하세요.', 'success');
+
+                } catch (error) {
+                    hideLoading();
+                    showNotification('팀원 추가 중 오류가 발생했습니다: ' + error.message, 'error');
                 }
             });
 
