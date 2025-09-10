@@ -485,9 +485,13 @@ async function readFileContent(file) {
         
         // For text files, read as text
         if (file.type === 'text/plain') {
-            reader.onload = (e) => resolve(e.target.result);
+            reader.onload = (e) => {
+                const content = e.target.result;
+                const summary = summarizeContent(content);
+                resolve(`=== 텍스트 파일 내용 (${file.name}) ===\n\n${content}\n\n=== 내용 요약 ===\n${summary}`);
+            };
             reader.onerror = (e) => reject(e);
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
         } 
         // For PDF files, attempt basic text extraction
         else if (file.type === 'application/pdf') {
@@ -495,19 +499,40 @@ async function readFileContent(file) {
                 try {
                     const arrayBuffer = e.target.result;
                     // Convert ArrayBuffer to text (basic attempt)
-                    // This is a very basic approach - in production you'd use pdf.js or similar
-                    const text = new TextDecoder('utf-8').decode(arrayBuffer);
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    let text = '';
                     
-                    // Extract readable text patterns (very basic)
-                    const readableText = text.match(/[\x20-\x7E\uAC00-\uD7A3\u3131-\u3163]+/g);
+                    // Try to decode as UTF-8 first
+                    try {
+                        text = new TextDecoder('utf-8').decode(uint8Array);
+                    } catch {
+                        // Fallback to latin1
+                        text = new TextDecoder('latin1').decode(uint8Array);
+                    }
+                    
+                    // Extract readable text patterns (Korean + English + numbers)
+                    const readableText = text.match(/[\x20-\x7E\uAC00-\uD7A3\u3131-\u3163\uFF00-\uFFEF]+/g);
+                    
                     if (readableText && readableText.length > 0) {
-                        const extracted = readableText.join(' ').substring(0, 2000);
-                        resolve(`=== PDF 파일에서 추출된 내용 (${file.name}) ===\n\n${extracted}\n\n[주의: 기본 텍스트 추출 방식을 사용했습니다. 완전한 내용이 아닐 수 있습니다.]`);
+                        // Filter and clean extracted text
+                        const cleanedText = readableText
+                            .filter(line => line.trim().length > 2)
+                            .map(line => line.trim())
+                            .filter(line => !line.match(/^[^\w\uAC00-\uD7A3]+$/))
+                            .join(' ')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        
+                        const extracted = cleanedText.substring(0, 3000);
+                        const summary = summarizeContent(extracted);
+                        
+                        resolve(`=== PDF 파일 내용 (${file.name}) ===\n\n${extracted}\n\n=== 추출된 내용 요약 ===\n${summary}\n\n[주의: 기본 텍스트 추출 방식입니다. 완전한 내용이 아닐 수 있습니다.]`);
                     } else {
-                        resolve(`=== PDF 파일 업로드됨 (${file.name}) ===\n\n[PDF 내용 자동 추출에 실패했습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n업로드 시간: ${new Date().toLocaleString()}`);
+                        resolve(`=== PDF 파일 (${file.name}) ===\n\n[PDF 내용 자동 추출에 실패했습니다.]\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 업로드: ${new Date().toLocaleString()}\n\n💡 직접 입력 탭에서 문서의 주요 내용을 입력해주세요.`);
                     }
                 } catch (error) {
-                    resolve(`=== PDF 파일 업로드됨 (${file.name}) ===\n\n[PDF 내용을 추출할 수 없습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n업로드 시간: ${new Date().toLocaleString()}`);
+                    console.warn('PDF 파싱 오류:', error);
+                    resolve(`=== PDF 파일 (${file.name}) ===\n\n[PDF 내용 추출 중 오류가 발생했습니다.]\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 업로드: ${new Date().toLocaleString()}\n\n💡 직접 입력 탭에서 문서의 주요 내용을 입력해주세요.`);
                 }
             };
             reader.onerror = (e) => reject(e);
@@ -515,9 +540,53 @@ async function readFileContent(file) {
         }
         // For Word documents and other files
         else {
-            resolve(`=== 문서 파일 업로드됨 (${file.name}) ===\n\n[${getFileTypeDescription(file.type)} 파일이 업로드되었습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n파일 형식: ${file.type}\n업로드 시간: ${new Date().toLocaleString()}\n\n--- 여기에 문서의 주요 내용을 입력하세요 ---\n\n`);
+            const fileInfo = `=== ${getFileTypeDescription(file.type)} 문서 (${file.name}) ===\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 형식: ${file.type}\n- 업로드: ${new Date().toLocaleString()}\n\n💡 ${file.type.includes('word') ? 'Word' : '해당'} 문서의 내용을 직접 입력 탭에서 입력해주세요.\n\n--- 문서 주요 내용 ---\n(여기에 수동으로 입력)\n\n`;
+            resolve(fileInfo);
         }
     });
+}
+
+// Content summarization function
+function summarizeContent(content) {
+    if (!content || content.length < 50) {
+        return '내용이 너무 짧아 요약할 수 없습니다.';
+    }
+    
+    const lines = content.split('\n').filter(line => line.trim());
+    const summary = [];
+    
+    // Extract key points
+    const keyPatterns = [
+        /프로젝트.*?[:：]/gi,
+        /기업.*?[:：]/gi,
+        /회사.*?[:：]/gi,
+        /요구사항.*?[:：]/gi,
+        /목표.*?[:：]/gi,
+        /기간.*?[:：]/gi,
+        /예산.*?[:：]/gi,
+        /범위.*?[:：]/gi,
+        /성과.*?[:：]/gi,
+        /기대.*?[:：]/gi
+    ];
+    
+    lines.forEach(line => {
+        keyPatterns.forEach(pattern => {
+            if (pattern.test(line)) {
+                summary.push(`• ${line.trim()}`);
+            }
+        });
+    });
+    
+    // If no key patterns found, extract first few meaningful lines
+    if (summary.length === 0) {
+        const meaningfulLines = lines
+            .filter(line => line.length > 10)
+            .slice(0, 5)
+            .map(line => `• ${line.trim()}`);
+        summary.push(...meaningfulLines);
+    }
+    
+    return summary.length > 0 ? summary.join('\n') : '주요 내용을 자동으로 요약할 수 없습니다.';
 }
 
 function getFileTypeDescription(mimeType) {
@@ -1033,7 +1102,7 @@ function setupRfpFileUpload() {
     }
 
     // Handle RFP file selection
-    function handleRfpFileSelect(file) {
+    async function handleRfpFileSelect(file) {
         // Validate file type and size
         const allowedTypes = ['application/pdf', 'application/msword', 
                              'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
@@ -1055,22 +1124,55 @@ function setupRfpFileUpload() {
         uploadedFileName.textContent = file.name;
         uploadedFileSize.textContent = `크기: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
         
-        // Read file content for preview (for text files)
-        if (file.type === 'text/plain') {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target.result;
-                filePreview.textContent = content.substring(0, 500) + (content.length > 500 ? '...' : '');
-            };
-            reader.readAsText(file);
-        } else {
-            filePreview.textContent = `${file.type.includes('pdf') ? 'PDF' : 'Word'} 문서가 업로드되었습니다. 내용은 처리 시 추출됩니다.`;
+        // Show loading state for preview
+        filePreview.innerHTML = `<div class="flex items-center text-blue-600">
+            <i class="fas fa-spinner fa-spin mr-2"></i>
+            파일 내용을 분석하고 있습니다...
+        </div>`;
+        
+        try {
+            // Read and process file content
+            const content = await readFileContent(file);
+            
+            // Display enhanced preview with formatting
+            const lines = content.split('\n');
+            const previewLines = lines.slice(0, 15); // Show first 15 lines
+            
+            filePreview.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-semibold text-green-700">
+                            <i class="fas fa-check-circle mr-1"></i>파일 내용 추출 완료
+                        </span>
+                        <span class="text-xs text-gray-500">
+                            ${lines.length > 15 ? `${lines.length}줄 중 15줄 미리보기` : `총 ${lines.length}줄`}
+                        </span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded text-sm max-h-48 overflow-y-auto border-l-4 border-blue-500">
+                        <pre class="whitespace-pre-wrap font-mono text-xs leading-relaxed">${previewLines.join('\n')}</pre>
+                        ${lines.length > 15 ? '<div class="text-center text-gray-500 mt-2 text-xs">... (더 많은 내용이 있습니다)</div>' : ''}
+                    </div>
+                    <div class="text-xs text-green-600 flex items-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        프로젝트 생성 시 전체 내용이 RFP에 포함됩니다
+                    </div>
+                </div>
+            `;
+            
+            showNotification(`파일 "${file.name}" 내용이 성공적으로 추출되었습니다.`, 'success');
+            
+        } catch (error) {
+            console.warn('파일 미리보기 오류:', error);
+            filePreview.innerHTML = `
+                <div class="text-orange-600 text-sm">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    파일 미리보기를 생성할 수 없습니다. 프로젝트 생성 시 내용 추출을 다시 시도합니다.
+                </div>
+            `;
         }
         
         dropZone.classList.add('hidden');
         uploadedFileInfo.classList.remove('hidden');
-        
-        showNotification(`파일 "${file.name}"이 선택되었습니다.`, 'success');
     }
 }
 
