@@ -273,33 +273,71 @@ async function loadProjects() {
 
 function displayProjects(projects) {
     if (projects.length === 0) {
+        const emptyMessage = isDemoMode ? 
+            '데모 프로젝트가 없습니다. 🚀 Demo Test 버튼으로 샘플 프로젝트를 생성해보세요!' : 
+            '프로젝트가 없습니다. 새 프로젝트를 생성해보세요!';
+            
         projectList.innerHTML = `
             <div class=\"text-center py-8 text-gray-500\">
                 <i class=\"fas fa-folder-open text-4xl mb-3\"></i>
-                <p>프로젝트가 없습니다. 새 프로젝트를 생성해보세요!</p>
+                <p>${emptyMessage}</p>
             </div>
         `;
         return;
     }
 
-    projectList.innerHTML = projects.map(project => `
-        <div class=\"project-item bg-gray-50 p-4 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors\" 
-             onclick=\"selectProject(${project.id})\">
-            <div class=\"flex justify-between items-start\">
-                <div class=\"flex-1\">
-                    <h5 class=\"font-semibold text-gray-800\">${project.name}</h5>
-                    ${project.client_company ? `<p class=\"text-sm text-gray-600\">${project.client_company}</p>` : ''}
-                    ${project.rfp_summary ? `<p class=\"text-sm text-gray-500 mt-1\">${project.rfp_summary.slice(0, 100)}...</p>` : ''}
-                </div>
-                <div class=\"text-right\">
-                    <span class=\"text-xs text-gray-500\">${formatDate(project.created_at)}</span>
-                    <div class=\"flex items-center mt-1\">
-                        <i class=\"fas fa-arrow-right text-blue-600\"></i>
-                    </div>
+    // Add header with instructions if in demo mode
+    const headerHtml = isDemoMode ? `
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-magic text-purple-600 mr-2"></i>
+                <div>
+                    <h4 class="font-semibold text-purple-800">🎭 Demo 모드</h4>
+                    <p class="text-sm text-purple-700 mt-1">
+                        아래 샘플 프로젝트 중 하나를 클릭하여 팀 구성을 확인하고 AI 분석을 체험해보세요!
+                    </p>
                 </div>
             </div>
         </div>
-    `).join('');
+    ` : '';
+
+    projectList.innerHTML = headerHtml + projects.map(project => {
+        const isDemoProject = project.name.includes('📊') || project.name.includes('🏦') || project.name.includes('🚀');
+        const demoIndicator = isDemoProject ? `
+            <span class="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-full border border-purple-200 animate-pulse">
+                <i class="fas fa-flask mr-1"></i>DEMO
+            </span>
+        ` : '';
+
+        return `
+            <div class="project-item bg-white border border-gray-200 p-4 rounded-lg hover:bg-gray-50 hover:border-blue-300 cursor-pointer transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5" 
+                 onclick="selectProject(${project.id})">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <h5 class="font-semibold text-gray-800">${project.name}</h5>
+                            ${demoIndicator}
+                        </div>
+                        ${project.client_company ? `<p class="text-sm text-gray-600 mt-1">
+                            <i class="fas fa-building mr-1"></i>${project.client_company}
+                        </p>` : ''}
+                        ${project.rfp_summary ? `<p class="text-sm text-gray-500 mt-2 line-clamp-2">${project.rfp_summary.slice(0, 120)}...</p>` : ''}
+                        ${isDemoMode && isDemoProject ? `
+                            <div class="mt-2 text-xs text-purple-600">
+                                <i class="fas fa-mouse-pointer mr-1"></i>클릭하여 팀 구성 보기 → AI 분석 체험
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="text-right ml-4">
+                        <span class="text-xs text-gray-500">${formatDate(project.created_at)}</span>
+                        <div class="flex items-center mt-1 justify-end">
+                            <i class="fas fa-arrow-right text-blue-600 hover:text-blue-800 transition-colors"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 async function handleCreateProject(e) {
@@ -911,54 +949,132 @@ async function uploadFile(file, fileType, projectId = null, teamMemberId = null)
 // Demo test functionality
 async function handleDemoTest() {
     try {
-        // Show confirmation dialog
-        if (!confirm('🚀 데모 테스트를 시작하시겠습니까?\n\n샘플 프로젝트 3개와 각각의 팀원들이 자동으로 생성됩니다.\n생성 완료 후 자동으로 AI 분석도 실행됩니다.')) {
+        // Show confirmation dialog with clear instructions
+        if (!confirm('🚀 데모 테스트를 시작하시겠습니까?\n\n📋 3개의 샘플 컨설팅 프로젝트와 전문 팀원들이 생성됩니다:\n• 디지털 전환 전략 프로젝트\n• ESG 경영 컨설팅 프로젝트  \n• 스타트업 투자유치 프로젝트\n\n✨ 생성 후 체험 방법:\n1️⃣ Demo 모드 토글을 켜주세요\n2️⃣ 관심있는 프로젝트를 클릭하세요\n3️⃣ 팀원 구성을 확인하세요\n4️⃣ "AI 팀 분석 시작" 버튼을 클릭하세요')) {
             return;
         }
 
-        showLoading('🔮 데모 데이터를 생성하고 있습니다...\n잠시만 기다려주세요 (약 10-15초)');
+        showLoading('📋 데모 프로젝트를 생성하고 있습니다...\n\n전문 컨설팅 프로젝트 3개와\n각 프로젝트별 팀원 4명씩 총 12명을 생성 중입니다\n\n잠시만 기다려주세요 (약 5-10초)');
         
         // Generate demo data
         const demoData = await apiRequest('/api/demo/generate', {
             method: 'POST'
         });
         
-        showNotification('✨ 데모 데이터가 성공적으로 생성되었습니다!', 'success');
-        
-        // Show demo info
-        document.getElementById('demoInfo').classList.remove('hidden');
-        
-        // Reload projects
-        await loadProjects();
-        
         hideLoading();
         
-        // Auto-select and analyze first project
-        if (demoData.projects && demoData.projects.length > 0) {
-            showNotification('🤖 첫 번째 프로젝트의 AI 분석을 시작합니다...', 'info');
-            
-            setTimeout(async () => {
-                try {
-                    await selectProject(demoData.projects[0].id);
-                    
-                    // Wait a bit for UI to settle
-                    setTimeout(async () => {
-                        await handleAnalyzeTeam();
-                        
-                        // Show success message with tips
-                        setTimeout(() => {
-                            showNotification('🎉 데모 완료! 다른 프로젝트들도 확인해보세요!', 'success');
-                        }, 2000);
-                    }, 1000);
-                } catch (error) {
-                    console.error('Auto analysis failed:', error);
-                }
-            }, 500);
+        // Automatically enable demo mode after creation
+        const demoToggle = document.getElementById('demoModeToggle');
+        if (demoToggle && !demoToggle.checked) {
+            demoToggle.checked = true;
+            isDemoMode = true;
+            updateModeIndicator();
         }
+        
+        // Show demo info banner
+        const demoInfo = document.getElementById('demoInfo');
+        if (demoInfo) {
+            demoInfo.classList.remove('hidden');
+        }
+        
+        // Reload projects to show demo data
+        await loadProjects();
+        
+        // Show success with step-by-step guidance
+        showNotification('✨ 데모 프로젝트 생성 완료!', 'success');
+        
+        // Show detailed step-by-step instructions
+        setTimeout(() => {
+            showDemoGuidanceModal();
+        }, 1000);
         
     } catch (error) {
         hideLoading();
         showNotification('데모 데이터 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+    }
+}
+
+// Demo guidance modal
+function showDemoGuidanceModal() {
+    const overlay = document.createElement('div');
+    overlay.id = 'demoGuidanceModal';
+    overlay.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 animate-fadeIn';
+    overlay.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-lg mx-4 shadow-2xl transform animate-slideUp">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-rocket text-3xl text-white"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">🎯 데모 체험 가이드</h3>
+                <p class="text-gray-600">3개의 전문 컨설팅 프로젝트가 준비되었습니다!</p>
+            </div>
+            
+            <!-- Steps -->
+            <div class="space-y-4 mb-6">
+                <div class="flex items-start p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                    <div class="w-8 h-8 mr-3 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-1">프로젝트 선택하기</h4>
+                        <p class="text-blue-700 text-sm">아래 목록에서 관심있는 프로젝트를 클릭하세요</p>
+                        <ul class="text-xs text-blue-600 mt-1 ml-2">
+                            <li>• 📊 글로벌 제조업체 디지털 전환 전략</li>
+                            <li>• 🏦 금융사 ESG 경영 컨설팅</li>
+                            <li>• 🚀 스타트업 성장 전략 및 투자 유치</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+                    <div class="w-8 h-8 mr-3 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                    <div>
+                        <h4 class="font-semibold text-green-800 mb-1">팀 구성 확인하기</h4>
+                        <p class="text-green-700 text-sm">각 프로젝트에는 4명의 전문 컨설턴트가 배정되어 있습니다</p>
+                        <p class="text-xs text-green-600 mt-1">• 역할, MBTI, 전문 스킬, 경험을 확인해보세요</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-4 bg-purple-50 border-l-4 border-purple-500 rounded-r-lg">
+                    <div class="w-8 h-8 mr-3 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                    <div>
+                        <h4 class="font-semibold text-purple-800 mb-1">AI 분석 시작하기</h4>
+                        <p class="text-purple-700 text-sm">"AI 팀 분석 시작" 버튼을 클릭하여 고급 AI 분석을 체험하세요</p>
+                        <p class="text-xs text-purple-600 mt-1">• 팀 케미스트리, 도메인 적합성, 권장사항을 확인할 수 있습니다</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="flex space-x-3">
+                <button onclick="hideDemoGuidanceModal()" 
+                        class="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>닫기
+                </button>
+                <button onclick="hideDemoGuidanceModal(); scrollToProjects();" 
+                        class="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all">
+                    <i class="fas fa-arrow-down mr-2"></i>프로젝트 보기
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+}
+
+function hideDemoGuidanceModal() {
+    const modal = document.getElementById('demoGuidanceModal');
+    if (modal) {
+        modal.classList.add('animate-fadeOut');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
+
+function scrollToProjects() {
+    const projectSection = document.getElementById('projectList');
+    if (projectSection) {
+        projectSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 

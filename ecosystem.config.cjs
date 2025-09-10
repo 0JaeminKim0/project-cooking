@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'webapp-railway',
-      script: 'tsx',
-      args: 'src/server.ts',
+      script: 'npx',
+      args: 'tsx src/server.ts',
       env: {
         NODE_ENV: 'development',
         PORT: 3000
