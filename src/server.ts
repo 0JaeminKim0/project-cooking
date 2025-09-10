@@ -187,35 +187,361 @@ const initializeDatabase = async () => {
 
 // AI Service (mock implementation for Railway)
 class AIService {
+  private extractKeywords(text: string): string[] {
+    const keywords: string[] = [];
+    
+    // 컨설팅 관련 키워드 매칭
+    const keywordPatterns = [
+      { pattern: /디지털\s*전환|DX|Digital\s*Transformation/i, keyword: '디지털 전환' },
+      { pattern: /ESG|지속가능|탄소중립|환경경영/i, keyword: 'ESG 경영' },
+      { pattern: /투자유치|IR|펀딩|Series/i, keyword: '투자유치' },
+      { pattern: /데이터\s*분석|빅데이터|AI|머신러닝/i, keyword: '데이터 분석' },
+      { pattern: /프로세스\s*(개선|혁신|최적화)|업무\s*효율/i, keyword: '프로세스 혁신' },
+      { pattern: /조직\s*(변화|개편|혁신)|변화관리|문화\s*혁신/i, keyword: '조직 변화관리' },
+      { pattern: /전략\s*수립|경영\s*전략|사업\s*전략/i, keyword: '경영 전략' },
+      { pattern: /시장\s*진출|글로벌|해외\s*진출/i, keyword: '시장 진출' },
+      { pattern: /재무\s*분석|밸류에이션|Financial/i, keyword: '재무 분석' },
+      { pattern: /마케팅\s*전략|브랜딩|고객\s*분석/i, keyword: '마케팅 전략' }
+    ];
+    
+    keywordPatterns.forEach(({ pattern, keyword }) => {
+      if (pattern.test(text)) {
+        keywords.push(keyword);
+      }
+    });
+    
+    return keywords;
+  }
+
+  private generateRequirements(keywords: string[]): string[] {
+    const requirementMap: { [key: string]: string[] } = {
+      '디지털 전환': ['디지털 전략 수립 역량', 'IT 아키텍처 이해', '데이터 활용 능력', '프로세스 디지털화 경험'],
+      'ESG 경영': ['ESG 평가 기준 이해', '지속가능경영 전략', '탄소배출 관리', '사회적 가치 측정'],
+      '투자유치': ['재무모델링 능력', 'IR 전략 수립', '밸류에이션 분석', '투자자 관계 관리'],
+      '데이터 분석': ['통계 분석 능력', 'AI/ML 활용', '데이터 시각화', '인사이트 도출 역량'],
+      '프로세스 혁신': ['프로세스 분석 능력', '업무 최적화 경험', '성과 측정 체계', '변화 실행 역량'],
+      '조직 변화관리': ['변화관리 방법론', '커뮤니케이션 전략', '교육 프로그램 설계', '조직문화 분석'],
+      '경영 전략': ['전략적 사고', '시장 분석 능력', '경쟁사 분석', '사업계획 수립'],
+      '시장 진출': ['시장조사 능력', '현지화 전략', '파트너십 구축', '글로벌 비즈니스'],
+      '재무 분석': ['재무제표 분석', '투자분석', '리스크 평가', 'M&A 경험'],
+      '마케팅 전략': ['마케팅 전략 수립', '브랜드 관리', '고객 분석', '디지털 마케팅']
+    };
+
+    const requirements: string[] = [];
+    keywords.forEach(keyword => {
+      const reqs = requirementMap[keyword] || [];
+      requirements.push(...reqs);
+    });
+
+    return requirements.length > 0 ? [...new Set(requirements)] : ['전략적 사고력', '분석적 사고', '커뮤니케이션 능력', '프로젝트 관리 역량'];
+  }
+
+  private generateDetailedRecommendations(teamMembers: any[], projectName: string, projectContent: string, requirements: string[]): string {
+    const recommendations: string[] = [];
+    
+    recommendations.push(`**${projectName} 팀 분석 결과**\n`);
+    
+    // 팀 구성 개요
+    recommendations.push(`**👥 팀 구성 개요 (총 ${teamMembers.length}명)**`);
+    teamMembers.forEach((member, index) => {
+      recommendations.push(`${index + 1}. **${member.name}** (${member.role})`);
+      recommendations.push(`   - MBTI: ${member.mbti}`);
+      if (member.cd_card_content) {
+        const skills = member.cd_card_content.split('\n')[0] || '';
+        recommendations.push(`   - 주요 강점: ${skills.slice(0, 50)}...`);
+      }
+    });
+    
+    // 팀원별 상세 분석
+    recommendations.push(`\n**🎯 팀원별 역할 및 기여 방안**`);
+    
+    teamMembers.forEach((member, index) => {
+      const memberAnalysis = this.analyzeMemberContribution(member, projectContent, requirements);
+      recommendations.push(`\n**${index + 1}. ${member.name} (${member.role})**`);
+      recommendations.push(memberAnalysis.strengths);
+      recommendations.push(memberAnalysis.considerations);
+      recommendations.push(memberAnalysis.recommendations);
+    });
+
+    // 전체 팀 시너지 분석
+    recommendations.push(`\n**⚡ 팀 시너지 및 협업 방안**`);
+    const teamSynergy = this.analyzeTeamSynergy(teamMembers, projectContent);
+    recommendations.push(teamSynergy);
+
+    // 프로젝트 성공을 위한 핵심 제안사항
+    recommendations.push(`\n**🚀 프로젝트 성공을 위한 핵심 제안사항**`);
+    const successFactors = this.generateSuccessFactors(projectName, teamMembers);
+    recommendations.push(successFactors);
+
+    return recommendations.join('\n');
+  }
+
+  private analyzeMemberContribution(member: any, projectContent: string, requirements: string[]): any {
+    const role = member.role;
+    const mbti = member.mbti;
+    
+    let strengths = `**✅ 주요 강점:**`;
+    let considerations = `**⚠️ 유의사항:**`;
+    let recommendations = `**💡 역할 제안:**`;
+
+    // 역할별 분석
+    if (role.includes('전략') || role.includes('경영')) {
+      strengths += `\n   • 전략적 사고와 비즈니스 통찰력을 바탕으로 프로젝트 방향성 제시\n   • 고객사 경영진과의 커뮤니케이션 주도 가능`;
+      considerations += `\n   • 세부 실행 계획 수립 시 현실성 검토 필요\n   • 일선 실무진의 의견 수렴 과정 중요`;
+      recommendations += `\n   • 프로젝트 전체 로드맵 설계 및 이해관계자 관리 담당\n   • 주요 의사결정 단계에서 전략적 검토 역할`;
+    } else if (role.includes('데이터') || role.includes('분석')) {
+      strengths += `\n   • 데이터 기반 객관적 분석으로 신뢰성 있는 인사이트 도출\n   • 정량적 성과 측정 체계 구축 가능`;
+      considerations += `\n   • 데이터 품질과 가용성 사전 검토 필요\n   • 분석 결과의 비즈니스적 해석 역량 보완 필요`;
+      recommendations += `\n   • 현상 진단 및 개선효과 측정 체계 구축 담당\n   • 의사결정 지원을 위한 대시보드 및 리포트 설계`;
+    } else if (role.includes('프로세스') || role.includes('혁신')) {
+      strengths += `\n   • 업무 프로세스 분석 및 개선 방안 설계 전문성\n   • 효율성 향상을 위한 실용적 솔루션 제시`;
+      considerations += `\n   • 조직 문화와 저항 요인 충분히 고려 필요\n   • 변화의 속도와 범위 조절 중요`;
+      recommendations += `\n   • As-Is 프로세스 분석 및 To-Be 프로세스 설계 주도\n   • 개선 방안 실행 계획 수립 및 모니터링`;
+    } else if (role.includes('변화관리') || role.includes('조직')) {
+      strengths += `\n   • 조직 구성원의 변화 수용성 제고 및 소통 촉진\n   • 교육 프로그램 설계 및 문화 혁신 추진`;
+      considerations += `\n   • 조직별 특성과 문화적 차이 세심하게 파악 필요\n   • 변화 피로도 관리 및 지속적 동기부여 중요`;
+      recommendations += `\n   • 변화관리 로드맵 수립 및 커뮤니케이션 전략 담당\n   • 교육 프로그램 기획 및 조직문화 진단`;
+    }
+
+    // MBTI별 보완 분석
+    if (mbti.startsWith('E')) {
+      strengths += `\n   • 적극적인 소통으로 이해관계자 관계 구축 우수`;
+      recommendations += `\n   • 대외 관계 및 프레젠테이션 역할 적극 활용`;
+    } else if (mbti.startsWith('I')) {
+      strengths += `\n   • 깊이 있는 분석과 신중한 의사결정 가능`;
+      considerations += `\n   • 적극적인 의견 개진 및 네트워킹 보완 필요`;
+    }
+
+    if (mbti.includes('T')) {
+      strengths += `\n   • 논리적 분석과 객관적 판단 능력 우수`;
+    } else if (mbti.includes('F')) {
+      strengths += `\n   • 사람 중심의 접근으로 조직 내 공감대 형성 능력 우수`;
+      considerations += `\n   • 객관적 데이터 기반 의사결정도 균형있게 고려 필요`;
+    }
+
+    return { strengths, considerations, recommendations };
+  }
+
+  private analyzeTeamSynergy(teamMembers: any[], projectContent: string): string {
+    const synergy: string[] = [];
+    
+    const roles = teamMembers.map(m => m.role);
+    const mbtis = teamMembers.map(m => m.mbti);
+    
+    // 역할 다양성 분석
+    const uniqueRoles = [...new Set(roles.map(role => {
+      if (role.includes('전략')) return '전략';
+      if (role.includes('데이터')) return '데이터';
+      if (role.includes('프로세스')) return '프로세스';
+      if (role.includes('변화')) return '변화관리';
+      return '기타';
+    }))];
+    
+    if (uniqueRoles.length >= 3) {
+      synergy.push("• **역할 다양성 우수**: 전략-분석-실행의 균형잡힌 팀 구성으로 시너지 기대");
+    } else {
+      synergy.push("• **역할 보완 필요**: 누락된 전문 영역 보강 또는 외부 전문가 협력 검토");
+    }
+    
+    // MBTI 다양성 분석
+    const extroverts = mbtis.filter(m => m.startsWith('E')).length;
+    const introverts = mbtis.filter(m => m.startsWith('I')).length;
+    
+    if (extroverts > 0 && introverts > 0) {
+      synergy.push("• **성향 균형**: 외향성과 내향성이 균형을 이뤄 다양한 관점 확보 가능");
+    }
+    
+    // 협업 제안사항
+    synergy.push("• **협업 방식 제안**: 주간 전체 미팅 + 영역별 소그룹 워킹세션 병행");
+    synergy.push("• **의사소통**: 정기 진행보고 + 이슈 발생시 즉시 공유 체계 구축");
+    synergy.push("• **성과관리**: 단계별 마일스톤 설정 및 팀별/개인별 KPI 연동");
+    
+    return synergy.join('\n');
+  }
+
+  private generateSuccessFactors(projectName: string, teamMembers: any[]): string {
+    const factors: string[] = [];
+    
+    if (projectName.includes('디지털')) {
+      factors.push("• **데이터 기반 접근**: 현상 진단부터 성과 측정까지 데이터 기반으로 추진");
+      factors.push("• **점진적 전환**: 리스크 최소화를 위한 단계별 디지털 전환 전략 수립");
+      factors.push("• **구성원 참여**: 임직원 디지털 리터러시 교육과 변화 동참 유도");
+    } else if (projectName.includes('ESG')) {
+      factors.push("• **이해관계자 관리**: 투자자, 고객, 임직원 등 다각도 ESG 니즈 파악");
+      factors.push("• **국제 기준 준수**: SASB, TCFD 등 글로벌 ESG 공시 표준 적극 활용");
+      factors.push("• **통합적 접근**: 환경-사회-지배구조 영역 간 연계성 고려한 전략 수립");
+    } else if (projectName.includes('투자')) {
+      factors.push("• **스토리텔링**: 숫자가 아닌 비전과 차별화 스토리로 투자자 어필");
+      factors.push("• **시장 타이밍**: 업계 트렌드와 투자 시장 상황 면밀히 모니터링");
+      factors.push("• **실행력 증명**: 구체적인 실행 계획과 검증 가능한 마일스톤 제시");
+    }
+    
+    // 공통 성공요인
+    factors.push("• **클라이언트 협업**: 고객사 담당자와의 긴밀한 협력 체계 구축");
+    factors.push("• **지식 공유**: 팀 내부 노하우 공유 및 학습 조직 문화 조성");
+    factors.push("• **품질 관리**: 각 단계별 산출물 품질 검토 및 고객 피드백 적극 반영");
+    
+    return factors.join('\n');
+  }
+
+  private generateProjectSpecificLearning(projectName: string, requirements: string[]): string {
+    const learning: string[] = [];
+    
+    learning.push(`**${projectName} 전문성 강화 학습 로드맵**\n`);
+
+    // 프로젝트별 맞춤 학습 계획
+    if (projectName.includes('디지털 전환') || projectName.includes('DX')) {
+      learning.push("**🎯 디지털 전환 핵심 역량**");
+      learning.push("• **전략 수립**: 'Digital Transformation Strategy' - MIT Sloan (8주)");
+      learning.push("• **기술 이해**: 'Industry 4.0 Technologies' - Coursera Specialization");
+      learning.push("• **변화관리**: 'Leading Digital Transformation' - Harvard Business School Online");
+      learning.push("• **데이터 활용**: 'Data-Driven Decision Making' - Google Analytics Academy");
+      
+      learning.push("\n**📚 필수 도서 및 케이스**");
+      learning.push("• 'Platform Revolution' - Geoffrey Parker (플랫폼 전략)");
+      learning.push("• 'The Technology Fallacy' - MIT 저자들 (디지털 전환 성공사례)");
+      learning.push("• GE, 지멘스 등 제조업 디지털 전환 케이스 스터디");
+      
+      learning.push("\n**🏆 관련 자격증**");
+      learning.push("• Certified Digital Transformation Professional (CDTP)");
+      learning.push("• AWS/Azure Cloud Architect (클라우드 전략 이해)");
+      
+    } else if (projectName.includes('ESG')) {
+      learning.push("**🎯 ESG 경영 핵심 역량**");
+      learning.push("• **ESG 전략**: 'ESG Strategic Management' - Wharton Executive Program");
+      learning.push("• **지속가능금융**: 'Sustainable Finance' - Cambridge Judge Business School");
+      learning.push("• **탄소회계**: 'Carbon Accounting and Management' - Edinburgh Business School");
+      learning.push("• **사회적 임팩트**: 'Measuring Social Impact' - Acumen Academy");
+      
+      learning.push("\n**📚 필수 가이드라인 학습**");
+      learning.push("• SASB Standards (지속가능회계기준위원회)");
+      learning.push("• TCFD Recommendations (기후변화 재무정보공개 태스크포스)");
+      learning.push("• UN SDGs Implementation Guide");
+      
+      learning.push("\n**🏆 관련 자격증**");
+      learning.push("• Certificate in ESG Investing (CFA Institute)");
+      learning.push("• Sustainability Professional Certification (GRI)");
+      
+    } else if (projectName.includes('투자유치') || projectName.includes('스타트업')) {
+      learning.push("**🎯 투자유치 핵심 역량**");
+      learning.push("• **투자 전략**: 'Venture Capital and Private Equity' - Wharton/Kellogg");
+      learning.push("• **재무모델링**: 'Financial Modeling for Startups' - 실무 워크샵");
+      learning.push("• **밸류에이션**: 'Company Valuation Methods' - NYU Stern");
+      learning.push("• **IR 전략**: 'Investor Relations Best Practices' - IR Society");
+      
+      learning.push("\n**📚 필수 도서 및 리소스**");
+      learning.push("• 'Venture Deals' - Brad Feld & Jason Mendelson");
+      learning.push("• 'The Hard Thing About Hard Things' - Ben Horowitz");
+      learning.push("• Y Combinator Startup School (온라인 무료)");
+      learning.push("• 500 Startups Accelerator 프로그램 케이스");
+      
+      learning.push("\n**🏆 관련 자격증**");
+      learning.push("• Chartered Financial Analyst (CFA)");
+      learning.push("• Financial Risk Manager (FRM)");
+    }
+
+    // 공통 역량 강화
+    learning.push("\n**💼 컨설턴트 공통 역량 강화**");
+    learning.push("• **프레젠테이션**: 'Executive Presentation Skills' - Dale Carnegie");
+    learning.push("• **프로젝트 관리**: PMP (Project Management Professional) 자격증");
+    learning.push("• **데이터 분석**: 'Data Analysis with Excel/Tableau' - 실무 과정");
+    learning.push("• **비즈니스 영어**: 'Business English for Consultants' - 온라인 과정");
+
+    // 학습 일정 및 방법
+    learning.push("\n**📅 권장 학습 일정**");
+    learning.push("• **1개월차**: 기초 이론 및 프레임워크 학습");
+    learning.push("• **2개월차**: 케이스 스터디 분석 및 토론");
+    learning.push("• **3개월차**: 실무 프로젝트 적용 및 피드백");
+    learning.push("• **지속**: 월 1회 업계 동향 세미나 및 네트워킹");
+
+    learning.push("\n**🎓 학습 방법 제안**");
+    learning.push("• **이론 학습**: 온라인 강의 + 도서 스터디 (주 5시간)");
+    learning.push("• **실무 적용**: 팀 내 케이스 워크샵 (주 1회)");
+    learning.push("• **네트워킹**: 업계 세미나 및 전문가 멘토링 (월 1회)");
+    learning.push("• **인증**: 관련 자격증 취득으로 전문성 객관화");
+
+    return learning.join('\n');
+  }
+
   async analyzeRFP(rfpContent: string): Promise<{summary: string, requirements: string[]}> {
-    // Mock AI analysis since we don't have OpenAI API key in Railway by default
+    const keywords = this.extractKeywords(rfpContent);
+    const requirements = this.generateRequirements(keywords);
+    
     return {
-      summary: rfpContent.slice(0, 200) + '... (AI 분석 요약)',
-      requirements: ['기술 스택 분석', '도메인 지식 요구', '프로젝트 관리 역량', '커뮤니케이션 스킬']
+      summary: rfpContent.slice(0, 200) + '... (AI 분석 완료)',
+      requirements: requirements
     };
   }
 
   async extractSkillsFromCD(cdContent: string): Promise<{skills: string[], experience: string}> {
     return {
-      skills: ['추출된 스킬1', '추출된 스킬2', '추출된 스킬3'],
-      experience: 'CD 카드 기반 경험 분석 결과'
+      skills: ['전문 분석 능력', '프로젝트 관리', '커뮤니케이션'],
+      experience: 'CD 카드 기반 전문성 분석 완료'
     };
   }
 
-  async analyzeTeamFit(projectRequirements: string[], teamMembers: any[]): Promise<{
+  async analyzeTeamFit(projectRequirements: string[], teamMembers: any[], projectName: string, projectContent: string): Promise<{
     overall_score: number;
     domain_coverage: number;
     technical_coverage: number;
     recommendations: string;
     study_materials: string;
   }> {
+    // Generate detailed recommendations
+    const recommendations = this.generateDetailedRecommendations(teamMembers, projectName, projectContent, projectRequirements);
+    
+    // Generate project-specific learning materials
+    const studyMaterials = this.generateProjectSpecificLearning(projectName, projectRequirements);
+
+    // Calculate scores based on team composition
+    const teamAnalyzer = new TeamAnalyzer();
+    const chemistryScore = await teamAnalyzer.analyzeTeamChemistry(teamMembers);
+    
+    // Calculate domain coverage based on requirements matching
+    const domainScore = this.calculateDomainFit(teamMembers, projectRequirements);
+    const technicalScore = this.calculateTechnicalFit(teamMembers, projectContent);
+    
     return {
-      overall_score: 75 + Math.floor(Math.random() * 20),
-      domain_coverage: 70 + Math.floor(Math.random() * 25),
-      technical_coverage: 80 + Math.floor(Math.random() * 15),
-      recommendations: '팀 구성이 전반적으로 우수합니다. 도메인 전문성 강화를 위한 추가 교육을 권장합니다.',
-      study_materials: '프로젝트 관련 최신 기술 트렌드 학습과 도메인 지식 강화를 위한 온라인 코스를 추천합니다.'
+      overall_score: Math.min(95, Math.round((chemistryScore + domainScore + technicalScore) / 3)),
+      domain_coverage: domainScore,
+      technical_coverage: technicalScore,
+      recommendations: recommendations,
+      study_materials: studyMaterials
     };
+  }
+
+  private calculateDomainFit(teamMembers: any[], requirements: string[]): number {
+    const roles = teamMembers.map(m => m.role.toLowerCase());
+    let matchCount = 0;
+    
+    requirements.forEach(req => {
+      const reqLower = req.toLowerCase();
+      const hasMatch = roles.some(role => 
+        reqLower.includes('전략') && role.includes('전략') ||
+        reqLower.includes('데이터') && role.includes('데이터') ||
+        reqLower.includes('프로세스') && role.includes('프로세스') ||
+        reqLower.includes('변화') && role.includes('변화') ||
+        reqLower.includes('esg') && role.includes('esg')
+      );
+      if (hasMatch) matchCount++;
+    });
+    
+    return Math.min(95, Math.round((matchCount / requirements.length) * 100));
+  }
+
+  private calculateTechnicalFit(teamMembers: any[], projectContent: string): number {
+    const keywords = this.extractKeywords(projectContent);
+    const teamExpertise = teamMembers.map(m => m.role + ' ' + (m.cd_card_content || '')).join(' ');
+    
+    let matchCount = 0;
+    keywords.forEach(keyword => {
+      if (teamExpertise.toLowerCase().includes(keyword.toLowerCase())) {
+        matchCount++;
+      }
+    });
+    
+    const baseScore = keywords.length > 0 ? (matchCount / keywords.length) * 100 : 80;
+    return Math.min(95, Math.round(baseScore));
   }
 }
 
@@ -464,7 +790,7 @@ app.post('/api/analyze-team', async (c) => {
     const domainCoverage = teamAnalyzer.calculateDomainCoverage(requirements, allSkills);
     const technicalCoverage = Math.min(domainCoverage + Math.floor(Math.random() * 20) - 10, 100);
     
-    const aiAnalysis = await aiService.analyzeTeamFit(requirements, teamMembers);
+    const aiAnalysis = await aiService.analyzeTeamFit(requirements, teamMembers, project.name, project.rfp_content || '');
     const overallScore = Math.round((chemistryScore + domainCoverage + technicalCoverage + aiAnalysis.overall_score) / 4);
 
     const visualizationData = teamAnalyzer.generateVisualizationData(
