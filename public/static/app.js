@@ -1024,13 +1024,35 @@ async function handleAddTeamMember(e) {
         // Reset form and file selections
         addTeamMemberForm.reset();
         selectedCdCardFile = null;
+        
+        // Clear all input fields explicitly
+        const memberNameInput = document.getElementById('memberName');
+        const memberRoleInput = document.getElementById('memberRole');
+        const memberMbtiInput = document.getElementById('memberMbti');
+        
+        if (memberNameInput) memberNameInput.value = '';
+        if (memberRoleInput) memberRoleInput.value = '';
+        if (memberMbtiInput) memberMbtiInput.value = '';
+        
+        // Reset CD card file info display
         const cdCardFileInfo = document.getElementById('cdCardFileInfo');
+        const cdCardFileInput = document.getElementById('cdCardFileInput');
         if (cdCardFileInfo) {
             cdCardFileInfo.classList.add('hidden');
         }
+        if (cdCardFileInput) {
+            cdCardFileInput.value = '';
+        }
+        
+        // Focus on the name input for easy sequential addition
+        setTimeout(() => {
+            if (memberNameInput) {
+                memberNameInput.focus();
+            }
+        }, 100);
         
         hideLoading();
-        showNotification('팀원이 추가되었습니다!', 'success');
+        showNotification('팀원이 추가되었습니다! 계속해서 다른 팀원을 추가할 수 있습니다.', 'success');
         
     } catch (error) {
         hideLoading();
@@ -1065,9 +1087,20 @@ async function handleAnalyzeTeam() {
         });
 
         hideAIAnalysisModal();
+        
+        // Show results in current page
         displayAnalysisResults(analysisData);
         
-        showNotification('🎉 AI 팀 분석이 완료되었습니다!', 'success');
+        // Open results page in new tab
+        if (analysisData.analysis_id) {
+            setTimeout(() => {
+                const resultUrl = `/analysis-result/${analysisData.analysis_id}`;
+                window.open(resultUrl, '_blank', 'noopener,noreferrer');
+                showNotification('🎉 AI 팀 분석이 완료되었습니다! 새 탭에서 상세 결과를 확인하세요.', 'success');
+            }, 1000); // 1초 후에 새 탭 열기
+        } else {
+            showNotification('🎉 AI 팀 분석이 완료되었습니다!', 'success');
+        }
         
     } catch (error) {
         hideAIAnalysisModal();
@@ -1089,6 +1122,22 @@ function displayAnalysisResults(analysis) {
     // Update recommendations
     document.getElementById('recommendationsContent').innerHTML = formatText(analysis.recommendations);
     document.getElementById('studyMaterialsContent').innerHTML = formatText(analysis.study_materials);
+    
+    // Add "View Detailed Results" button if analysis_id exists
+    if (analysis.analysis_id) {
+        const viewResultBtn = document.createElement('div');
+        viewResultBtn.className = 'text-center mt-6 mb-4';
+        viewResultBtn.innerHTML = `
+            <button onclick="openAnalysisResult(${analysis.analysis_id})" 
+                    class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg">
+                <i class="fas fa-external-link-alt mr-2"></i>
+                상세 분석 결과 보기 (새 탭)
+            </button>
+        `;
+        
+        const recommendationsSection = document.getElementById('recommendationsContent').parentElement;
+        recommendationsSection.insertBefore(viewResultBtn, recommendationsSection.firstChild);
+    }
 
     // Create charts
     if (analysis.visualization_data) {
@@ -1963,9 +2012,15 @@ loadProjects = async function() {
     return await originalLoadProjects();
 };
 
+// Analysis result page functions
+function openAnalysisResult(analysisId) {
+    const resultUrl = `/analysis-result/${analysisId}`;
+    window.open(resultUrl, '_blank', 'noopener,noreferrer');
+}
+
 // Console log for debugging
 console.log('AI 팀 분석 서비스 JavaScript 로드됨');
-console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트, Demo Mode Toggle');
+console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트, Demo Mode Toggle, 분석 결과 페이지');
 
 // Initialize demo mode on page load  
 document.addEventListener('DOMContentLoaded', () => {

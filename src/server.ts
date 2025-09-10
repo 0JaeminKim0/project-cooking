@@ -1006,6 +1006,401 @@ class TeamAnalyzer {
   }
 }
 
+// Generate analysis result page HTML
+function generateAnalysisResultPage(data: {
+  analysis: any;
+  project: any;
+  teamMembers: any[];
+  visualizationData: any;
+}) {
+  const { analysis, project, teamMembers, visualizationData } = data;
+  
+  const formatText = (text: string) => {
+    if (!text) return '<p class="text-gray-500">내용이 없습니다.</p>';
+    return text.split('\\n').filter(line => line.trim()).map(line => `<p class="mb-3">${line.trim()}</p>`).join('');
+  };
+
+  const getMBTICategory = (mbti: string) => {
+    const analysts = ['INTJ', 'INTP', 'ENTJ', 'ENTP'];
+    const diplomats = ['INFJ', 'INFP', 'ENFJ', 'ENFP'];
+    const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
+    const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
+    
+    if (analysts.includes(mbti)) return 'bg-purple-100 text-purple-800 border-purple-300';
+    if (diplomats.includes(mbti)) return 'bg-green-100 text-green-800 border-green-300';
+    if (sentinels.includes(mbti)) return 'bg-blue-100 text-blue-800 border-blue-300';
+    if (explorers.includes(mbti)) return 'bg-orange-100 text-orange-800 border-orange-300';
+    return 'bg-gray-100 text-gray-800 border-gray-300';
+  };
+
+  return `
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 AI 팀 분석 결과 - ${project.name}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 1rem 0;
+        }
+        .team-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .team-card:hover {
+            border-left-color: #667eea;
+            transform: translateX(4px);
+        }
+        .analysis-content {
+            line-height: 1.8;
+        }
+        .analysis-content h1, .analysis-content h2, .analysis-content h3 {
+            margin: 1.5rem 0 1rem 0;
+            font-weight: 600;
+        }
+        .analysis-content h1 { font-size: 1.5rem; color: #1f2937; }
+        .analysis-content h2 { font-size: 1.3rem; color: #374151; }
+        .analysis-content h3 { font-size: 1.1rem; color: #4b5563; }
+        .analysis-content ul, .analysis-content ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        .analysis-content li {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header Section -->
+    <header class="gradient-bg text-white py-8 no-print">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">🤖 AI 팀 분석 결과</h1>
+                    <p class="text-blue-100 text-lg">${project.name}</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="window.print()" class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-colors">
+                        <i class="fas fa-print mr-2"></i>인쇄하기
+                    </button>
+                    <button onclick="downloadPDF()" class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>PDF 다운로드
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        <!-- Project Overview -->
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-project-diagram text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">${project.name}</h2>
+                    ${project.client_company ? `<p class="text-gray-600 mt-1">${project.client_company}</p>` : ''}
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">📋 프로젝트 개요</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700 leading-relaxed">${project.rfp_summary || '프로젝트 요약이 없습니다.'}</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">👥 팀 구성 (${teamMembers.length}명)</h3>
+                    <div class="space-y-2">
+                        ${teamMembers.map(member => `
+                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                <div>
+                                    <span class="font-medium text-gray-800">${member.name}</span>
+                                    <span class="text-gray-600 ml-2">${member.role}</span>
+                                </div>
+                                ${member.mbti ? `
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full border ${getMBTICategory(member.mbti)}">${member.mbti}</span>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scores Overview -->
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-chart-line text-blue-500 mr-3"></i>
+                종합 분석 점수
+            </h2>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="score-circle mx-auto mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        ${analysis.overall_fit_score}
+                    </div>
+                    <h3 class="font-semibold text-gray-800">종합 적합도</h3>
+                    <p class="text-gray-600 text-sm mt-1">Overall Fit</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="score-circle mx-auto mb-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        ${analysis.team_chemistry_score}
+                    </div>
+                    <h3 class="font-semibold text-gray-800">팀 케미스트리</h3>
+                    <p class="text-gray-600 text-sm mt-1">Team Chemistry</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="score-circle mx-auto mb-4" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        ${analysis.domain_coverage_score}
+                    </div>
+                    <h3 class="font-semibold text-gray-800">도메인 커버리지</h3>
+                    <p class="text-gray-600 text-sm mt-1">Domain Coverage</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="score-circle mx-auto mb-4" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        ${analysis.technical_coverage_score}
+                    </div>
+                    <h3 class="font-semibold text-gray-800">기술 커버리지</h3>
+                    <p class="text-gray-600 text-sm mt-1">Technical Coverage</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Team Analysis -->
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-users text-green-500 mr-3"></i>
+                상세 팀 분석
+            </h2>
+            
+            <div class="analysis-content prose prose-lg max-w-none">
+                ${formatText(analysis.recommendations)}
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Radar Chart -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-radar-chart text-purple-500 mr-3"></i>
+                    역량 분석 차트
+                </h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Coverage Chart -->
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar text-orange-500 mr-3"></i>
+                    도메인 커버리지
+                </h3>
+                <div class="chart-container">
+                    <canvas id="coverageChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Materials -->
+        <section class="bg-white rounded-2xl shadow-xl p-8 mb-8 page-break">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-graduation-cap text-indigo-500 mr-3"></i>
+                전문성 강화 로드맵
+            </h2>
+            
+            <div class="analysis-content prose prose-lg max-w-none">
+                ${formatText(analysis.study_materials)}
+            </div>
+        </section>
+
+        <!-- Analysis Info -->
+        <section class="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl p-8 no-print">
+            <div class="text-center">
+                <h3 class="text-xl font-bold mb-4">🤖 AI 분석 정보</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <p class="font-semibold">분석 일시</p>
+                        <p class="text-gray-300">${new Date(analysis.created_at).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">분석 대상</p>
+                        <p class="text-gray-300">팀원 ${teamMembers.length}명 / 프로젝트 1건</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">AI 모델</p>
+                        <p class="text-gray-300">Team Analysis Engine v2.1</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Chart initialization
+        const radarData = ${JSON.stringify(visualizationData.radar_chart)};
+        const coverageData = ${JSON.stringify(visualizationData.coverage_heatmap)};
+        
+        // Create radar chart
+        const radarCtx = document.getElementById('radarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: radarData.labels,
+                datasets: [
+                    {
+                        label: '프로젝트 요구사항',
+                        data: radarData.project_requirements,
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        pointBackgroundColor: 'rgb(239, 68, 68)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(239, 68, 68)'
+                    },
+                    {
+                        label: '팀 역량',
+                        data: radarData.team_capabilities,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(59, 130, 246)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: { stepSize: 20 }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+        
+        // Create coverage chart
+        const coverageCtx = document.getElementById('coverageChart').getContext('2d');
+        new Chart(coverageCtx, {
+            type: 'bar',
+            data: {
+                labels: coverageData.categories,
+                datasets: [{
+                    label: '커버리지 점수',
+                    data: coverageData.coverage_scores,
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(245, 158, 11, 0.8)', 
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgb(239, 68, 68)',
+                        'rgb(245, 158, 11)',
+                        'rgb(16, 185, 129)',
+                        'rgb(59, 130, 246)',
+                        'rgb(139, 92, 246)',
+                        'rgb(236, 72, 153)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // PDF download function
+        function downloadPDF() {
+            alert('PDF 다운로드 기능은 준비 중입니다. 현재는 브라우저의 인쇄 기능을 사용해 PDF로 저장할 수 있습니다.');
+        }
+    </script>
+</body>
+</html>`;
+}
+
 // Create Hono app
 const app = new Hono()
 
@@ -1183,7 +1578,7 @@ app.post('/api/analyze-team', async (c) => {
       }
     );
 
-    await runQuery(
+    const analysisResult = await runQuery(
       `INSERT INTO analysis_results (
         project_id, team_chemistry_score, domain_coverage_score, 
         technical_coverage_score, overall_fit_score, recommendations, study_materials
@@ -1200,6 +1595,7 @@ app.post('/api/analyze-team', async (c) => {
     );
 
     return c.json({
+      analysis_id: analysisResult.lastID,
       team_chemistry_score: chemistryScore,
       domain_coverage_score: domainCoverage,
       technical_coverage_score: technicalCoverage,
@@ -1211,6 +1607,81 @@ app.post('/api/analyze-team', async (c) => {
   } catch (error) {
     console.error('팀 분석 오류:', error);
     return c.json({ error: '팀 분석 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// Analysis result page route
+app.get('/analysis-result/:analysisId', async (c) => {
+  try {
+    const analysisId = c.req.param('analysisId');
+    
+    // Get analysis result with project and team member data
+    const analysis = await getQuery('SELECT * FROM analysis_results WHERE id = ?', [analysisId]);
+    
+    if (!analysis) {
+      return c.html(`
+        <html>
+          <head>
+            <title>분석 결과를 찾을 수 없습니다</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+          </head>
+          <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+            <div class="text-center">
+              <h1 class="text-2xl font-bold text-gray-800 mb-4">분석 결과를 찾을 수 없습니다</h1>
+              <p class="text-gray-600">요청한 분석 결과가 존재하지 않습니다.</p>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+    
+    const project = await getQuery('SELECT * FROM projects WHERE id = ?', [analysis.project_id]);
+    const teamMembers = await allQuery('SELECT * FROM team_members WHERE project_id = ? ORDER BY created_at', [analysis.project_id]);
+    
+    // Generate visualization data
+    const teamAnalyzer = new TeamAnalyzer();
+    let requirements: string[] = [];
+    if (project.requirements_analysis) {
+      try {
+        requirements = JSON.parse(project.requirements_analysis);
+      } catch {
+        requirements = project.requirements_analysis.split(',').map((r: string) => r.trim());
+      }
+    }
+    
+    const visualizationData = teamAnalyzer.generateVisualizationData(
+      requirements,
+      teamMembers,
+      {
+        chemistry: analysis.team_chemistry_score,
+        domain: analysis.domain_coverage_score,
+        technical: analysis.technical_coverage_score
+      }
+    );
+    
+    return c.html(generateAnalysisResultPage({
+      analysis,
+      project,
+      teamMembers,
+      visualizationData
+    }));
+    
+  } catch (error) {
+    console.error('분석 결과 페이지 오류:', error);
+    return c.html(`
+      <html>
+        <head>
+          <title>오류 발생</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+          <div class="text-center">
+            <h1 class="text-2xl font-bold text-red-600 mb-4">오류가 발생했습니다</h1>
+            <p class="text-gray-600">분석 결과를 불러오는 중 문제가 발생했습니다.</p>
+          </div>
+        </body>
+      </html>
+    `);
   }
 });
 
