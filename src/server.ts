@@ -1583,7 +1583,11 @@ app.get('/', (c) => {
                                     <div id="dropZoneContent">
                                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
                                         <p class="text-lg text-gray-600 mb-2">RFP 파일을 여기에 드롭하거나 클릭하여 선택</p>
-                                        <p class="text-sm text-gray-500 mb-4">지원 형식: PDF, DOC, DOCX, TXT (최대 10MB)</p>
+                                        <p class="text-sm text-gray-500 mb-2">지원 형식: PDF, DOC, DOCX, TXT (최대 10MB)</p>
+                                        <p class="text-xs text-amber-600 mb-4">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            한국어 추출이 안될 경우, 문서를 .txt로 저장하여 업로드하거나 직접 입력을 권장합니다
+                                        </p>
                                         <button type="button" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
                                             <i class="fas fa-folder-open mr-2"></i>파일 선택
                                         </button>

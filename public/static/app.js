@@ -493,55 +493,162 @@ async function readFileContent(file) {
             reader.onerror = (e) => reject(e);
             reader.readAsText(file, 'UTF-8');
         } 
-        // For PDF files, attempt basic text extraction
+        // For PDF files, attempt enhanced text extraction
         else if (file.type === 'application/pdf') {
             reader.onload = async (e) => {
                 try {
                     const arrayBuffer = e.target.result;
-                    // Convert ArrayBuffer to text (basic attempt)
                     const uint8Array = new Uint8Array(arrayBuffer);
-                    let text = '';
                     
-                    // Try to decode as UTF-8 first
-                    try {
-                        text = new TextDecoder('utf-8').decode(uint8Array);
-                    } catch {
-                        // Fallback to latin1
-                        text = new TextDecoder('latin1').decode(uint8Array);
+                    // Convert to string for pattern matching
+                    let rawText = '';
+                    for (let i = 0; i < uint8Array.length; i++) {
+                        rawText += String.fromCharCode(uint8Array[i]);
                     }
                     
-                    // Extract readable text patterns (Korean + English + numbers)
-                    const readableText = text.match(/[\x20-\x7E\uAC00-\uD7A3\u3131-\u3163\uFF00-\uFFEF]+/g);
+                    // Extract text between stream objects (PDF structure)
+                    const extractedTexts = [];
                     
-                    if (readableText && readableText.length > 0) {
-                        // Filter and clean extracted text
-                        const cleanedText = readableText
-                            .filter(line => line.trim().length > 2)
-                            .map(line => line.trim())
-                            .filter(line => !line.match(/^[^\w\uAC00-\uD7A3]+$/))
-                            .join(' ')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-                        
-                        const extracted = cleanedText.substring(0, 3000);
-                        const summary = summarizeContent(extracted);
-                        
-                        resolve(`=== PDF 파일 내용 (${file.name}) ===\n\n${extracted}\n\n=== 추출된 내용 요약 ===\n${summary}\n\n[주의: 기본 텍스트 추출 방식입니다. 완전한 내용이 아닐 수 있습니다.]`);
+                    // Method 1: Look for text streams
+                    const streamPattern = /stream\s*(.*?)\s*endstream/gs;
+                    let match;
+                    while ((match = streamPattern.exec(rawText)) !== null) {
+                        const streamContent = match[1];
+                        // Decode basic text content
+                        const decodedText = extractTextFromPDFStream(streamContent);
+                        if (decodedText && decodedText.length > 5) {
+                            extractedTexts.push(decodedText);
+                        }
+                    }
+                    
+                    // Method 2: Look for direct text patterns
+                    const textPatterns = [
+                        /\(([\uAC00-\uD7A3\u3131-\u3163\w\s\.,!?\-:：]+)\)/g, // Text in parentheses
+                        /\[([\uAC00-\uD7A3\u3131-\u3163\w\s\.,!?\-:：]+)\]/g, // Text in brackets
+                        /Tj\s*([^\n\r]*)/g, // PDF text show operators
+                        /TJ\s*\[([^\]]*)\]/g // PDF text show array
+                    ];
+                    
+                    textPatterns.forEach(pattern => {
+                        let match;
+                        while ((match = pattern.exec(rawText)) !== null) {
+                            const text = match[1].trim();
+                            if (text.length > 2 && /[\uAC00-\uD7A3\u3131-\u3163]/.test(text)) {
+                                extractedTexts.push(text);
+                            }
+                        }
+                    });
+                    
+                    // Method 3: Unicode extraction for Korean text
+                    const unicodeKoreanPattern = /\\([0-9]{3,4})/g;
+                    const koreanChars = [];
+                    while ((match = unicodeKoreanPattern.exec(rawText)) !== null) {
+                        const charCode = parseInt(match[1], 8);
+                        if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
+                            koreanChars.push(String.fromCharCode(charCode));
+                        }
+                    }
+                    
+                    if (koreanChars.length > 0) {
+                        extractedTexts.push(koreanChars.join(''));
+                    }
+                    
+                    // Combine and clean extracted text
+                    const combinedText = extractedTexts
+                        .filter(text => text && text.trim().length > 2)
+                        .join(' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    
+                    if (combinedText && combinedText.length > 10) {
+                        const summary = summarizeContent(combinedText);
+                        resolve(`=== PDF 파일 내용 (${file.name}) ===\n\n${combinedText.substring(0, 2000)}\n\n=== 추출된 내용 요약 ===\n${summary}\n\n[주의: 클라이언트 기반 PDF 파싱으로 일부 내용이 누락될 수 있습니다.]`);
                     } else {
-                        resolve(`=== PDF 파일 (${file.name}) ===\n\n[PDF 내용 자동 추출에 실패했습니다.]\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 업로드: ${new Date().toLocaleString()}\n\n💡 직접 입력 탭에서 문서의 주요 내용을 입력해주세요.`);
+                        resolve(createFallbackFileInfo(file, 'PDF', '한국어 텍스트를 추출할 수 없었습니다. PDF의 구조가 복잡하거나 이미지 기반일 수 있습니다.'));
                     }
                 } catch (error) {
                     console.warn('PDF 파싱 오류:', error);
-                    resolve(`=== PDF 파일 (${file.name}) ===\n\n[PDF 내용 추출 중 오류가 발생했습니다.]\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 업로드: ${new Date().toLocaleString()}\n\n💡 직접 입력 탭에서 문서의 주요 내용을 입력해주세요.`);
+                    resolve(createFallbackFileInfo(file, 'PDF', 'PDF 파싱 중 오류가 발생했습니다.'));
                 }
             };
             reader.onerror = (e) => reject(e);
             reader.readAsArrayBuffer(file);
         }
-        // For Word documents and other files
+        // For DOCX files, attempt XML-based text extraction
+        else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            reader.onload = async (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const extractedText = await extractTextFromDOCX(arrayBuffer);
+                    
+                    if (extractedText && extractedText.length > 10) {
+                        const summary = summarizeContent(extractedText);
+                        resolve(`=== DOCX 파일 내용 (${file.name}) ===\n\n${extractedText}\n\n=== 추출된 내용 요약 ===\n${summary}\n\n[주의: 기본 DOCX 파싱으로 서식 정보는 제외됩니다.]`);
+                    } else {
+                        resolve(createFallbackFileInfo(file, 'Word', '텍스트 내용을 추출할 수 없었습니다. 문서가 복잡하거나 보호되어 있을 수 있습니다.'));
+                    }
+                } catch (error) {
+                    console.warn('DOCX 파싱 오류:', error);
+                    resolve(createFallbackFileInfo(file, 'Word', 'DOCX 파싱 중 오류가 발생했습니다.'));
+                }
+            };
+            reader.onerror = (e) => reject(e);
+            reader.readAsArrayBuffer(file);
+        }
+        // For DOC files and other documents
+        else if (file.type === 'application/msword') {
+            reader.onload = async (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    let text = '';
+                    
+                    // Try different encodings for DOC files
+                    const encodings = ['utf-8', 'euc-kr', 'cp949', 'iso-8859-1'];
+                    let bestText = '';
+                    
+                    for (const encoding of encodings) {
+                        try {
+                            const decoder = new TextDecoder(encoding, { fatal: false });
+                            const decoded = decoder.decode(uint8Array);
+                            
+                            // Count Korean characters to find best encoding
+                            const koreanCount = (decoded.match(/[\uAC00-\uD7A3]/g) || []).length;
+                            if (koreanCount > bestText.match(/[\uAC00-\uD7A3]/g)?.length || 0) {
+                                bestText = decoded;
+                            }
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+                    
+                    // Extract readable text patterns
+                    const readableText = bestText.match(/[\uAC00-\uD7A3\u3131-\u3163\w\s\.,!?\-:：\n\r]+/g);
+                    
+                    if (readableText && readableText.length > 0) {
+                        const cleanedText = readableText
+                            .filter(text => text.trim().length > 5)
+                            .join(' ')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .substring(0, 2000);
+                        
+                        const summary = summarizeContent(cleanedText);
+                        resolve(`=== DOC 파일 내용 (${file.name}) ===\n\n${cleanedText}\n\n=== 추출된 내용 요약 ===\n${summary}\n\n[주의: 기본 DOC 파싱으로 일부 내용이 누락될 수 있습니다.]`);
+                    } else {
+                        resolve(createFallbackFileInfo(file, 'Word', 'DOC 파일에서 텍스트를 추출할 수 없었습니다.'));
+                    }
+                } catch (error) {
+                    console.warn('DOC 파싱 오류:', error);
+                    resolve(createFallbackFileInfo(file, 'Word (DOC)', 'DOC 파싱 중 오류가 발생했습니다.'));
+                }
+            };
+            reader.onerror = (e) => reject(e);
+            reader.readAsArrayBuffer(file);
+        }
+        // For other document files
         else {
-            const fileInfo = `=== ${getFileTypeDescription(file.type)} 문서 (${file.name}) ===\n\n파일 정보:\n- 파일명: ${file.name}\n- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n- 형식: ${file.type}\n- 업로드: ${new Date().toLocaleString()}\n\n💡 ${file.type.includes('word') ? 'Word' : '해당'} 문서의 내용을 직접 입력 탭에서 입력해주세요.\n\n--- 문서 주요 내용 ---\n(여기에 수동으로 입력)\n\n`;
-            resolve(fileInfo);
+            resolve(createFallbackFileInfo(file, getFileTypeDescription(file.type), '지원되지 않는 파일 형식입니다.'));
         }
     });
 }
@@ -587,6 +694,155 @@ function summarizeContent(content) {
     }
     
     return summary.length > 0 ? summary.join('\n') : '주요 내용을 자동으로 요약할 수 없습니다.';
+}
+
+// Helper function to extract text from PDF streams
+function extractTextFromPDFStream(streamContent) {
+    try {
+        // Remove PDF operators and extract text
+        let text = streamContent
+            .replace(/BT\s*/g, '') // Begin text
+            .replace(/ET\s*/g, '') // End text
+            .replace(/Tf\s*/g, '') // Font
+            .replace(/Td\s*/g, '') // Text positioning
+            .replace(/TL\s*/g, '') // Text leading
+            .replace(/Tm\s*[\d\s\.\-]+/g, '') // Text matrix
+            .replace(/q\s*/g, '') // Save state
+            .replace(/Q\s*/g, '') // Restore state
+            .replace(/cm\s*[\d\s\.\-]+/g, '') // Coordinate matrix
+            .replace(/re\s*/g, '') // Rectangle
+            .replace(/f\s*/g, '') // Fill
+            .replace(/S\s*/g, '') // Stroke
+            .replace(/RG\s*[\d\s\.]+/g, '') // Color
+            .replace(/rg\s*[\d\s\.]+/g, '') // Color
+            .replace(/gs\s*\w+/g, ''); // Graphics state
+        
+        // Extract text in parentheses or brackets
+        const textMatches = text.match(/\(([^)]+)\)|<([^>]+)>/g);
+        if (textMatches) {
+            return textMatches
+                .map(match => match.replace(/[()<>]/g, ''))
+                .filter(text => text.trim().length > 0)
+                .join(' ');
+        }
+        
+        return '';
+    } catch (error) {
+        return '';
+    }
+}
+
+// Helper function to extract text from DOCX files
+async function extractTextFromDOCX(arrayBuffer) {
+    try {
+        // Convert ArrayBuffer to binary string
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binaryString = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+            binaryString += String.fromCharCode(uint8Array[i]);
+        }
+        
+        // Look for document.xml content (DOCX is a ZIP with XML files)
+        const documentXMLPattern = /document\.xml.*?<w:document[^>]*>(.*?)<\/w:document>/s;
+        const match = documentXMLPattern.exec(binaryString);
+        
+        if (match) {
+            const xmlContent = match[1];
+            
+            // Extract text from w:t elements
+            const textPattern = /<w:t[^>]*>(.*?)<\/w:t>/gs;
+            const textNodes = [];
+            let textMatch;
+            
+            while ((textMatch = textPattern.exec(xmlContent)) !== null) {
+                const text = textMatch[1]
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&apos;/g, "'")
+                    .trim();
+                
+                if (text.length > 0) {
+                    textNodes.push(text);
+                }
+            }
+            
+            return textNodes.join(' ').substring(0, 2000);
+        }
+        
+        // Fallback: try to find Korean text directly in the binary
+        const koreanPattern = /[\uAC00-\uD7A3\u3131-\u3163\s\w\.,!?\-:：]+/g;
+        const koreanMatches = binaryString.match(koreanPattern);
+        
+        if (koreanMatches) {
+            return koreanMatches
+                .filter(text => text.trim().length > 5)
+                .join(' ')
+                .substring(0, 2000);
+        }
+        
+        return '';
+    } catch (error) {
+        console.warn('DOCX 추출 오류:', error);
+        return '';
+    }
+}
+
+// Helper function to create fallback file info with better guidance
+function createFallbackFileInfo(file, fileTypeName, reason) {
+    const isKorean = /[\uAC00-\uD7A3]/.test(file.name);
+    
+    return `=== ${fileTypeName} 파일 (${file.name}) ===
+
+⚠️ 자동 텍스트 추출 실패
+
+사유: ${reason}
+
+파일 정보:
+- 파일명: ${file.name}
+- 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB
+- 형식: ${file.type}
+- 업로드: ${new Date().toLocaleString()}
+
+💡 권장 해결 방법:
+
+1️⃣ 텍스트 파일로 변환하여 업로드
+   - 문서를 열고 "다른 이름으로 저장" → "텍스트 파일(.txt)" 선택
+   - UTF-8 인코딩 옵션이 있다면 선택
+   - 변환된 .txt 파일을 다시 업로드
+
+2️⃣ 직접 입력 사용 (추천)
+   - 위의 "직접 입력" 탭 클릭
+   - 문서 내용을 복사하여 붙여넣기
+   - 이 방법이 가장 정확합니다
+
+3️⃣ 문서를 열고 주요 내용만 입력
+   아래 템플릿을 참고하여 주요 정보만 입력하세요:
+
+--- RFP 주요 내용 템플릿 ---
+
+프로젝트: [프로젝트명]
+기업: [고객사명]
+기간: [프로젝트 기간]
+예산: [총 예산]
+
+주요 요구사항:
+1. [요구사항 1]
+2. [요구사항 2]
+3. [요구사항 3]
+
+기대효과:
+- [기대효과 1]
+- [기대효과 2]
+
+기술요구사항:
+- [기술요구사항 1]
+- [기술요구사항 2]
+
+📝 위 템플릿에 맞춰 문서 내용을 입력하면 AI 분석이 더 정확해집니다.
+
+`;
 }
 
 function getFileTypeDescription(mimeType) {
