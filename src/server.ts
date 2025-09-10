@@ -1518,7 +1518,22 @@ app.get('/', (c) => {
                             📄 RFP 내용
                         </h4>
                         <div class="space-y-4">
-                            <div>
+                            <!-- RFP 입력 방법 선택 탭 -->
+                            <div class="border-b border-gray-200">
+                                <nav class="flex space-x-8">
+                                    <button id="textInputTab" 
+                                            class="py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600 focus:outline-none">
+                                        <i class="fas fa-edit mr-1"></i>직접 입력
+                                    </button>
+                                    <button id="fileUploadTab" 
+                                            class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
+                                        <i class="fas fa-file-upload mr-1"></i>파일 업로드
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <!-- 직접 입력 섹션 -->
+                            <div id="textInputSection">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 요구사항</label>
                                 <textarea id="rfpContent" rows="6"
                                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1531,6 +1546,43 @@ app.get('/', (c) => {
 - 데이터 기반 의사결정 체계 구축
 - ROI 분석 및 성과 측정 지표 개발"></textarea>
                             </div>
+
+                            <!-- 파일 업로드 섹션 -->
+                            <div id="fileUploadSection" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">RFP 문서 업로드</label>
+                                
+                                <!-- 드래그 앤 드롭 영역 -->
+                                <div id="rfpDropZone" 
+                                     class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                    <div id="dropZoneContent">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                        <p class="text-lg text-gray-600 mb-2">RFP 파일을 여기에 드롭하거나 클릭하여 선택</p>
+                                        <p class="text-sm text-gray-500 mb-4">지원 형식: PDF, DOC, DOCX, TXT (최대 10MB)</p>
+                                        <button type="button" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                                            <i class="fas fa-folder-open mr-2"></i>파일 선택
+                                        </button>
+                                    </div>
+                                    <input type="file" id="rfpFileInput" class="hidden" 
+                                           accept=".pdf,.doc,.docx,.txt" />
+                                </div>
+
+                                <!-- 업로드된 파일 정보 -->
+                                <div id="uploadedFileInfo" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-file-check text-green-600 mr-2"></i>
+                                        <div class="flex-1">
+                                            <p id="uploadedFileName" class="font-medium text-green-800"></p>
+                                            <p id="uploadedFileSize" class="text-sm text-green-600"></p>
+                                        </div>
+                                        <button type="button" id="removeFileBtn" class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <!-- 파일 내용 미리보기 -->
+                                    <div id="filePreview" class="mt-3 p-3 bg-white border rounded text-sm text-gray-700 max-h-32 overflow-y-auto"></div>
+                                </div>
+                            </div>
+
                             <form id="createProjectForm">
                                 <button type="submit" id="createProjectBtn" 
                                         class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">

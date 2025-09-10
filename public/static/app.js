@@ -346,21 +346,48 @@ async function handleCreateProject(e) {
     const projectName = document.getElementById('projectName').value;
     const clientCompany = document.getElementById('clientCompany').value;
     let rfpContent = document.getElementById('rfpContent').value;
+    
+    // Check which input method is active
+    const textInputSection = document.getElementById('textInputSection');
+    const fileUploadSection = document.getElementById('fileUploadSection');
+    const isFileUploadMode = !fileUploadSection.classList.contains('hidden');
 
     if (!projectName.trim()) {
         showNotification('프로젝트명을 입력해주세요.', 'warning');
         return;
     }
 
+    // Validate RFP content based on input method
+    if (isFileUploadMode) {
+        if (!selectedRfpFile) {
+            showNotification('RFP 파일을 업로드하거나 직접 입력 탭에서 내용을 입력해주세요.', 'warning');
+            return;
+        }
+    } else {
+        if (!rfpContent.trim()) {
+            showNotification('RFP 내용을 입력하거나 파일 업로드 탭에서 파일을 선택해주세요.', 'warning');
+            return;
+        }
+    }
+
     try {
         showLoading('프로젝트를 생성하고 AI 분석 중...');
         
-        // If RFP file is selected, read its content
-        if (selectedRfpFile && !rfpContent.trim()) {
+        // If file is selected, read its content
+        if (selectedRfpFile) {
             try {
-                rfpContent = await readFileContent(selectedRfpFile);
+                const fileContent = await readFileContent(selectedRfpFile);
+                // Combine file content with manual input if both exist
+                if (rfpContent.trim()) {
+                    rfpContent = rfpContent + '\n\n=== 업로드된 파일 내용 ===\n' + fileContent;
+                } else {
+                    rfpContent = fileContent;
+                }
             } catch (error) {
-                console.warn('파일 읽기 실패, 텍스트 입력 내용 사용:', error);
+                console.warn('파일 읽기 실패:', error);
+                if (!rfpContent.trim()) {
+                    throw new Error('파일을 읽을 수 없습니다. 직접 입력 모드를 사용해주세요.');
+                }
             }
         }
         
@@ -375,15 +402,7 @@ async function handleCreateProject(e) {
             data: projectData
         });
 
-        // Upload RFP file if selected
-        if (selectedRfpFile) {
-            try {
-                await uploadFile(selectedRfpFile, 'rfp', project.id);
-                showNotification('RFP 파일이 업로드되었습니다.', 'info');
-            } catch (error) {
-                console.warn('RFP 파일 업로드 실패:', error);
-            }
-        }
+        // File content is already included in RFP content, no separate upload needed
 
         hideLoading();
         showNotification('프로젝트가 성공적으로 생성되었습니다!', 'success');
@@ -391,7 +410,30 @@ async function handleCreateProject(e) {
         // Reset form and file selections
         createProjectForm.reset();
         selectedRfpFile = null;
-        document.getElementById('rfpFileInfo').classList.add('hidden');
+        
+        // Reset file upload UI
+        const uploadedFileInfo = document.getElementById('uploadedFileInfo');
+        const rfpDropZone = document.getElementById('rfpDropZone');
+        const rfpFileInput = document.getElementById('rfpFileInput');
+        
+        if (uploadedFileInfo) uploadedFileInfo.classList.add('hidden');
+        if (rfpDropZone) rfpDropZone.classList.remove('hidden');
+        if (rfpFileInput) rfpFileInput.value = '';
+        
+        // Reset to text input tab
+        const textInputTab = document.getElementById('textInputTab');
+        const fileUploadTab = document.getElementById('fileUploadTab');
+        const textInputSection = document.getElementById('textInputSection');
+        const fileUploadSection = document.getElementById('fileUploadSection');
+        
+        if (textInputTab && fileUploadTab && textInputSection && fileUploadSection) {
+            textInputTab.classList.add('border-blue-500', 'text-blue-600');
+            textInputTab.classList.remove('border-transparent', 'text-gray-500');
+            fileUploadTab.classList.add('border-transparent', 'text-gray-500');
+            fileUploadTab.classList.remove('border-blue-500', 'text-blue-600');
+            textInputSection.classList.remove('hidden');
+            fileUploadSection.classList.add('hidden');
+        }
         
         // Reload projects and select the new one
         await loadProjects();
@@ -406,17 +448,68 @@ async function handleCreateProject(e) {
 async function readFileContent(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (e) => reject(e);
         
         // For text files, read as text
         if (file.type === 'text/plain') {
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
             reader.readAsText(file);
-        } else {
-            // For other files, we'll just use a placeholder
-            // In a real implementation, you'd want to use OCR or document parsing
-            resolve(`[${file.name} 파일이 업로드됨 - 내용 분석 필요]`);
+        } 
+        // For PDF files, attempt basic text extraction
+        else if (file.type === 'application/pdf') {
+            reader.onload = async (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    // Convert ArrayBuffer to text (basic attempt)
+                    // This is a very basic approach - in production you'd use pdf.js or similar
+                    const text = new TextDecoder('utf-8').decode(arrayBuffer);
+                    
+                    // Extract readable text patterns (very basic)
+                    const readableText = text.match(/[\x20-\x7E\uAC00-\uD7A3\u3131-\u3163]+/g);
+                    if (readableText && readableText.length > 0) {
+                        const extracted = readableText.join(' ').substring(0, 2000);
+                        resolve(`=== PDF 파일에서 추출된 내용 (${file.name}) ===\n\n${extracted}\n\n[주의: 기본 텍스트 추출 방식을 사용했습니다. 완전한 내용이 아닐 수 있습니다.]`);
+                    } else {
+                        resolve(`=== PDF 파일 업로드됨 (${file.name}) ===\n\n[PDF 내용 자동 추출에 실패했습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n업로드 시간: ${new Date().toLocaleString()}`);
+                    }
+                } catch (error) {
+                    resolve(`=== PDF 파일 업로드됨 (${file.name}) ===\n\n[PDF 내용을 추출할 수 없습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n업로드 시간: ${new Date().toLocaleString()}`);
+                }
+            };
+            reader.onerror = (e) => reject(e);
+            reader.readAsArrayBuffer(file);
         }
+        // For Word documents and other files
+        else {
+            resolve(`=== 문서 파일 업로드됨 (${file.name}) ===\n\n[${getFileTypeDescription(file.type)} 파일이 업로드되었습니다. 수동으로 주요 내용을 입력해주세요.]\n\n파일명: ${file.name}\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB\n파일 형식: ${file.type}\n업로드 시간: ${new Date().toLocaleString()}\n\n--- 여기에 문서의 주요 내용을 입력하세요 ---\n\n`);
+        }
+    });
+}
+
+function getFileTypeDescription(mimeType) {
+    const descriptions = {
+        'application/msword': 'Microsoft Word',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Microsoft Word (DOCX)',
+        'application/pdf': 'PDF',
+        'text/plain': '텍스트'
+    };
+    return descriptions[mimeType] || '알 수 없는 형식의';
+}
+
+// Mock file upload function (for demonstration purposes)
+// In a real implementation, this would upload files to the server
+async function uploadFile(file, type, projectId, memberId = null) {
+    return new Promise((resolve) => {
+        // Simulate file upload delay
+        setTimeout(() => {
+            console.log(`Mock file upload: ${file.name} (${type}) for project ${projectId}${memberId ? `, member ${memberId}` : ''}`);
+            resolve({
+                success: true,
+                message: `파일 "${file.name}"이 업로드되었습니다.`,
+                fileId: Date.now(),
+                url: `mock://uploaded/${file.name}`
+            });
+        }, 1000);
     });
 }
 
@@ -811,11 +904,140 @@ window.addEventListener('error', function(e) {
 
 // File upload functionality
 function setupFileUploads() {
-    // RFP File Upload
-    setupFileUploadArea('rfpUploadArea', 'rfpFileInput', 'rfpFileInfo', 'rfpFileName', 'removeRfpFile', handleRfpFileSelect);
+    setupRfpInputTabs();
+    setupRfpFileUpload();
     
     // CD Card File Upload (will be setup when project details are shown)
     setupFileUploadArea('cdCardUploadArea', 'cdCardFileInput', 'cdCardFileInfo', 'cdCardFileName', 'removeCdCardFile', handleCdCardFileSelect);
+}
+
+// Setup RFP input method tabs
+function setupRfpInputTabs() {
+    const textInputTab = document.getElementById('textInputTab');
+    const fileUploadTab = document.getElementById('fileUploadTab');
+    const textInputSection = document.getElementById('textInputSection');
+    const fileUploadSection = document.getElementById('fileUploadSection');
+
+    if (!textInputTab || !fileUploadTab) return;
+
+    textInputTab.addEventListener('click', () => {
+        // Switch to text input
+        textInputTab.classList.add('border-blue-500', 'text-blue-600');
+        textInputTab.classList.remove('border-transparent', 'text-gray-500');
+        fileUploadTab.classList.add('border-transparent', 'text-gray-500');
+        fileUploadTab.classList.remove('border-blue-500', 'text-blue-600');
+        
+        textInputSection.classList.remove('hidden');
+        fileUploadSection.classList.add('hidden');
+    });
+
+    fileUploadTab.addEventListener('click', () => {
+        // Switch to file upload
+        fileUploadTab.classList.add('border-blue-500', 'text-blue-600');
+        fileUploadTab.classList.remove('border-transparent', 'text-gray-500');
+        textInputTab.classList.add('border-transparent', 'text-gray-500');
+        textInputTab.classList.remove('border-blue-500', 'text-blue-600');
+        
+        fileUploadSection.classList.remove('hidden');
+        textInputSection.classList.add('hidden');
+    });
+}
+
+// Setup RFP file upload with drag and drop
+function setupRfpFileUpload() {
+    const dropZone = document.getElementById('rfpDropZone');
+    const fileInput = document.getElementById('rfpFileInput');
+    const uploadedFileInfo = document.getElementById('uploadedFileInfo');
+    const uploadedFileName = document.getElementById('uploadedFileName');
+    const uploadedFileSize = document.getElementById('uploadedFileSize');
+    const filePreview = document.getElementById('filePreview');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+
+    if (!dropZone || !fileInput) return;
+
+    // Click to select file
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop events
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleRfpFileSelect(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleRfpFileSelect(file);
+        }
+    });
+
+    // Remove file button
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedRfpFile = null;
+            fileInput.value = '';
+            uploadedFileInfo.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+        });
+    }
+
+    // Handle RFP file selection
+    function handleRfpFileSelect(file) {
+        // Validate file type and size
+        const allowedTypes = ['application/pdf', 'application/msword', 
+                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                             'text/plain'];
+        
+        if (!allowedTypes.includes(file.type)) {
+            showNotification('지원하지 않는 파일 형식입니다. PDF, DOC, DOCX, TXT 파일만 업로드 가능합니다.', 'error');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+            showNotification('파일 크기는 10MB를 초과할 수 없습니다.', 'error');
+            return;
+        }
+
+        selectedRfpFile = file;
+        
+        // Show file info
+        uploadedFileName.textContent = file.name;
+        uploadedFileSize.textContent = `크기: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        
+        // Read file content for preview (for text files)
+        if (file.type === 'text/plain') {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                filePreview.textContent = content.substring(0, 500) + (content.length > 500 ? '...' : '');
+            };
+            reader.readAsText(file);
+        } else {
+            filePreview.textContent = `${file.type.includes('pdf') ? 'PDF' : 'Word'} 문서가 업로드되었습니다. 내용은 처리 시 추출됩니다.`;
+        }
+        
+        dropZone.classList.add('hidden');
+        uploadedFileInfo.classList.remove('hidden');
+        
+        showNotification(`파일 "${file.name}"이 선택되었습니다.`, 'success');
+    }
 }
 
 function setupFileUploadArea(uploadAreaId, fileInputId, fileInfoId, fileNameId, removeButtonId, onFileSelect) {
