@@ -1027,9 +1027,9 @@ app.get('/', (c) => {
 
             // Demo test functionality
             document.getElementById('demoTestBtn').addEventListener('click', async () => {
-                if (confirm('🚀 데모 테스트를 시작하시겠습니까?\\n\\n샘플 프로젝트 3개와 각각의 팀원들이 자동으로 생성됩니다.\\n생성 완료 후 자동으로 AI 분석도 실행됩니다.')) {
+                if (confirm('🚀 데모 테스트를 시작하시겠습니까?\\n\\n📋 샘플 프로젝트 3개와 각각의 팀원들이 생성됩니다.\\n\\n체험 방법:\\n1️⃣ 생성된 프로젝트 중 하나를 클릭\\n2️⃣ 팀원 구성 확인\\n3️⃣ "AI 팀 분석 시작" 버튼 클릭\\n4️⃣ 분석 결과 확인')) {
                     try {
-                        showLoading('🔮 데모 데이터를 생성하고 있습니다...\\n잠시만 기다려주세요 (약 10-15초)');
+                        showLoading('📋 데모 데이터를 생성하고 있습니다...\\n\\n3개 프로젝트와 12명의 팀원을 만드는 중입니다\\n잠시만 기다려주세요 (약 5-10초)');
                         
                         const response = await axios.post('/api/demo/generate');
                         
@@ -1043,25 +1043,9 @@ app.get('/', (c) => {
                         
                         hideLoading();
                         
-                        // Auto-select and analyze first project
+                        // Manual demo flow - let user experience each step
                         if (response.data.projects && response.data.projects.length > 0) {
-                            showNotification('🤖 첫 번째 프로젝트의 AI 분석을 시작합니다...', 'info');
-                            
-                            setTimeout(async () => {
-                                try {
-                                    await selectProject(response.data.projects[0].id);
-                                    
-                                    setTimeout(async () => {
-                                        await analyzeTeam(response.data.projects[0].id);
-                                        
-                                        setTimeout(() => {
-                                            showNotification('🎉 데모 완료! 다른 프로젝트들도 확인해보세요!', 'success');
-                                        }, 2000);
-                                    }, 1000);
-                                } catch (error) {
-                                    console.error('Auto analysis failed:', error);
-                                }
-                            }, 500);
+                            showNotification('✨ 데모 데이터 생성 완료!\\n\\n이제 아래 단계를 직접 체험해보세요:\\n\\n1️⃣ 원하는 프로젝트를 클릭해서 선택하세요\\n2️⃣ 팀원 구성을 확인해보세요\\n3️⃣ "AI 팀 분석 시작" 버튼을 클릭해보세요', 'success');
                         }
                         
                     } catch (error) {
