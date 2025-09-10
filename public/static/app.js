@@ -888,6 +888,13 @@ async function selectProject(projectId) {
         
         // Show project details section
         document.getElementById('projectDetails').classList.remove('hidden');
+        
+        // Show team member addition section
+        const addTeamMemberSection = document.getElementById('addTeamMemberSection');
+        if (addTeamMemberSection) {
+            addTeamMemberSection.classList.remove('hidden');
+        }
+        
         document.getElementById('projectDetails').scrollIntoView({ behavior: 'smooth' });
         
         // Setup file uploads for project details page
@@ -916,13 +923,16 @@ function displayTeamMembers() {
         teamMembersList.innerHTML = `
             <div class=\"text-center py-8 text-gray-500\">
                 <i class=\"fas fa-user-friends text-4xl mb-3\"></i>
-                <p>팀원이 없습니다. 팀원을 추가해보세요!</p>
+                <p class=\"mb-4\">팀원이 없습니다. 팀원을 추가해보세요!</p>
+                <button onclick=\"scrollToAddMember()\" class=\"bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors\">
+                    <i class=\"fas fa-user-plus mr-2\"></i>첫 번째 팀원 추가하기
+                </button>
             </div>
         `;
         return;
     }
 
-    teamMembersList.innerHTML = currentTeamMembers.map(member => `
+    const teamMembersHtml = currentTeamMembers.map(member => `
         <div class=\"team-member-card fade-in\">
             <div class=\"flex justify-between items-start\">
                 <div class=\"flex-1\">
@@ -943,6 +953,17 @@ function displayTeamMembers() {
             </div>
         </div>
     `).join('');
+    
+    // Add "Add Member" button at the end
+    const addMemberButton = `
+        <div class=\"text-center py-6\">
+            <button onclick=\"scrollToAddMember()\" class=\"bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors\">
+                <i class=\"fas fa-user-plus mr-2\"></i>팀원 추가하기
+            </button>
+        </div>
+    `;
+    
+    teamMembersList.innerHTML = teamMembersHtml + addMemberButton;
 }
 
 function getMBTICategory(mbti) {
@@ -1238,6 +1259,13 @@ function formatDate(dateString) {
 function backToProjectList() {
     projectDetails.classList.add('hidden');
     analysisResults.classList.add('hidden');
+    
+    // Hide team member addition section
+    const addTeamMemberSection = document.getElementById('addTeamMemberSection');
+    if (addTeamMemberSection) {
+        addTeamMemberSection.classList.add('hidden');
+    }
+    
     currentProject = null;
     currentTeamMembers = [];
     
@@ -1702,6 +1730,21 @@ function scrollToProjectCreation() {
             const projectNameInput = document.getElementById('projectName');
             if (projectNameInput) {
                 projectNameInput.focus();
+            }
+        }, 500);
+    }
+}
+
+function scrollToAddMember() {
+    const addMemberSection = document.getElementById('addTeamMemberSection');
+    if (addMemberSection) {
+        addMemberSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Focus on member name input for better UX
+        setTimeout(() => {
+            const memberNameInput = document.getElementById('memberName');
+            if (memberNameInput) {
+                memberNameInput.focus();
             }
         }, 500);
     }
