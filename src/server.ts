@@ -762,6 +762,33 @@ app.get('/', (c) => {
                     </div>
                 </div>
             </div>
+            
+            <!-- 프로젝트 목록 섹션 -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-folder-open mr-2 text-blue-600"></i>
+                    프로젝트 목록
+                </h3>
+                <div id="projectContainer" class="grid gap-6">
+                    <!-- 프로젝트 목록이 여기에 동적으로 추가됩니다 -->
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-folder-open text-4xl mb-3"></i>
+                        <p>프로젝트가 없습니다.</p>
+                        <p class="text-sm mt-2">🚀 Demo Test로 샘플 프로젝트를 생성해보세요!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 프로젝트 상세 정보 섹션 -->
+            <div id="projectDetails" class="hidden mt-8 bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-info-circle mr-2 text-green-600"></i>
+                    프로젝트 상세 정보
+                </h3>
+                <div id="projectDetailsContent">
+                    <!-- 프로젝트 상세 내용이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
