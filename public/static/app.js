@@ -262,7 +262,18 @@ async function apiRequest(url, options = {}) {
 async function loadProjects() {
     try {
         const mode = isDemoMode ? 'demo' : 'real';
-        const projects = await apiRequest(`/api/projects?mode=${mode}`);
+        let projects = await apiRequest(`/api/projects?mode=${mode}`);
+        
+        // Additional filtering for real mode to exclude demo-like projects
+        if (!isDemoMode) {
+            const demoLikeNames = [
+                '📊 글로벌 제조업체 디지털 전환 전략',
+                '🏦 금융사 ESG 경영 컨설팅', 
+                '🚀 스타트업 성장 전략 및 투자 유치'
+            ];
+            projects = projects.filter(project => !demoLikeNames.includes(project.name));
+        }
+        
         displayProjects(projects);
         updateModeIndicator();
     } catch (error) {
@@ -273,14 +284,37 @@ async function loadProjects() {
 
 function displayProjects(projects) {
     if (projects.length === 0) {
-        const emptyMessage = isDemoMode ? 
-            '데모 프로젝트가 없습니다. 🚀 Demo Test 버튼으로 샘플 프로젝트를 생성해보세요!' : 
-            '프로젝트가 없습니다. 새 프로젝트를 생성해보세요!';
+        let emptyMessage, emptyIcon, emptyActions = '';
+        
+        if (isDemoMode) {
+            emptyMessage = '데모 프로젝트가 없습니다.';
+            emptyIcon = 'fas fa-flask text-purple-500';
+            emptyActions = `
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600 mb-3">🚀 Demo Test 버튼을 클릭하여 샘플 프로젝트를 생성해보세요!</p>
+                    <button onclick="handleDemoTest()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-magic mr-2"></i>Demo Test 시작
+                    </button>
+                </div>
+            `;
+        } else {
+            emptyMessage = '실제 프로젝트가 없습니다.';
+            emptyIcon = 'fas fa-briefcase text-blue-500';
+            emptyActions = `
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600 mb-3">새로운 컨설팅 프로젝트를 생성하여 AI 팀 분석을 시작해보세요!</p>
+                    <button onclick="scrollToProjectCreation()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>프로젝트 생성하기
+                    </button>
+                </div>
+            `;
+        }
             
         projectList.innerHTML = `
-            <div class=\"text-center py-8 text-gray-500\">
-                <i class=\"fas fa-folder-open text-4xl mb-3\"></i>
-                <p>${emptyMessage}</p>
+            <div class="text-center py-12">
+                <i class="${emptyIcon} text-6xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">${emptyMessage}</h3>
+                ${emptyActions}
             </div>
         `;
         return;
@@ -1297,6 +1331,21 @@ function scrollToProjects() {
     const projectSection = document.getElementById('projectList');
     if (projectSection) {
         projectSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function scrollToProjectCreation() {
+    const createSection = document.getElementById('projectCreationSection');
+    if (createSection) {
+        createSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Focus on project name input for better UX
+        setTimeout(() => {
+            const projectNameInput = document.getElementById('projectName');
+            if (projectNameInput) {
+                projectNameInput.focus();
+            }
+        }, 500);
     }
 }
 

@@ -1383,6 +1383,32 @@ app.delete('/api/demo/reset', async (c) => {
   }
 });
 
+// Clean up incorrect real projects (ones that look like demo projects)
+app.delete('/api/projects/cleanup-real', async (c) => {
+  try {
+    // Delete real projects that have demo-like names (with emoji icons)
+    const demoNames = [
+      '📊 글로벌 제조업체 디지털 전환 전략',
+      '🏦 금융사 ESG 경영 컨설팅', 
+      '🚀 스타트업 성장 전략 및 투자 유치'
+    ];
+    
+    let deletedCount = 0;
+    for (const name of demoNames) {
+      const result = await runQuery('DELETE FROM projects WHERE type = ? AND name = ?', ['real', name]);
+      deletedCount += result.changes || 0;
+    }
+    
+    return c.json({ 
+      message: '잘못된 실제 프로젝트 데이터가 정리되었습니다.',
+      deleted_count: deletedCount
+    });
+  } catch (error) {
+    console.error('실제 프로젝트 정리 오류:', error);
+    return c.json({ error: '프로젝트 정리 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 // Fix existing projects type
 app.post('/api/fix-project-types', async (c) => {
   try {
