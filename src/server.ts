@@ -947,7 +947,7 @@ class TeamAnalyzer {
   }
 
   generateVisualizationData(projectRequirements: string[], teamMembers: TeamMember[], scores: any) {
-    const radarCategories = ['AI/ML', '웹개발', '모바일', '클라우드', '데이터베이스', '보안', 'UI/UX', '프로젝트관리'];
+    const radarCategories = ['기술 역량', '도메인 지식', '프로젝트 경험', '팀워크', '리더십', '커뮤니케이션'];
     const projectScores = radarCategories.map(() => Math.floor(Math.random() * 40) + 60);
     const teamScores = radarCategories.map((_, i) => Math.min(projectScores[i] + Math.floor(Math.random() * 30) - 15, 100));
 
