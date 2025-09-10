@@ -514,83 +514,85 @@ app.post('/api/demo/generate', async (c) => {
     // Sample project data (same as before)
     const sampleProjects = [
       {
-        name: '🤖 AI 챗봇 플랫폼 구축',
-        client_company: 'TechFlow Corp',
-        rfp_content: `고객 상담을 위한 AI 기반 챗봇 플랫폼을 개발하려고 합니다. 
-        
-주요 요구사항:
-- GPT-4 기반 자연어 처리
-- 실시간 채팅 인터페이스  
-- 다국어 지원 (한국어, 영어, 중국어)
-- RESTful API 설계
-- React 기반 관리자 대시보드
-- MongoDB 데이터베이스 연동
-- AWS 클라우드 배포
-        
-예상 프로젝트 기간: 3개월
-예산: 5억원`,
-        requirements: ['AI/ML', 'React', 'Node.js', 'MongoDB', 'AWS', '자연어처리', 'RESTful API', '다국어 지원']
+        name: '📊 글로벌 제조업체 디지털 전환 전략',
+        client_company: 'Global Manufacturing Corp',
+        rfp_content: `전통적인 제조 공정을 Industry 4.0 기반으로 전환하는 디지털 혁신 컨설팅 프로젝트입니다.
+
+주요 컨설팅 영역:
+- 현재 업무 프로세스 분석 및 최적화
+- IoT/AI 기반 스마트 팩토리 구축 전략
+- 데이터 기반 의사결정 체계 수립
+- 디지털 전환 로드맵 및 투자 계획
+- 조직 변화 관리 및 교육 프로그램
+- ROI 분석 및 성과 측정 지표 개발
+- 글로벌 표준 프로세스 구축
+
+프로젝트 규모: 12개월, 30억원
+대상 공장: 국내외 15개 사업장`,
+        requirements: ['디지털 전환', 'Industry 4.0', '프로세스 최적화', '변화관리', 'IoT/AI 전략', '데이터 분석', '조직 컨설팅', 'ROI 분석']
       },
       {
-        name: '📱 스마트 배송 모바일 앱',  
-        client_company: 'LogiSmart Inc',
-        rfp_content: `실시간 배송 추적 및 관리를 위한 모바일 애플리케이션 개발 프로젝트입니다.
+        name: '🏦 금융사 ESG 경영 컨설팅',  
+        client_company: 'Korea Financial Group',
+        rfp_content: `ESG(환경·사회·지배구조) 경영 체계 구축 및 지속가능경영 전략 수립 컨설팅입니다.
 
-주요 기능:
-- React Native 크로스 플랫폼 앱
-- 실시간 GPS 위치 추적
-- 푸시 알림 서비스
-- QR코드 스캔 기능
-- 배송원-고객 채팅
-- 결제 시스템 연동
-- 관리자 웹 대시보드
+컨설팅 범위:
+- ESG 현황 진단 및 Gap 분석
+- ESG 전략 및 정책 수립
+- 탄소중립 실행 계획 개발
+- 사회적 가치 창출 프로그램 설계
+- 지배구조 개선 방안
+- ESG 성과지표(KPI) 체계 구축
+- 이해관계자 소통 전략
+- ESG 투자 및 상품 개발 전략
 
-기술 스택: React Native, Node.js, PostgreSQL, Redis, Socket.io
-예상 기간: 4개월`,
-        requirements: ['React Native', 'Node.js', 'PostgreSQL', 'Redis', 'Socket.io', 'GPS', '모바일 개발', '실시간 통신']
+기대효과: ESG 평가 등급 상향, 브랜드 가치 제고
+프로젝트 기간: 8개월`,
+        requirements: ['ESG 경영', '지속가능경영', '탄소중립', '사회적 가치', '지배구조', '성과관리', '이해관계자 관리', '금융업 도메인']
       },
       {
-        name: '🏥 헬스케어 데이터 분석 시스템',
-        client_company: 'MediData Solutions', 
-        rfp_content: `의료 빅데이터 분석 및 시각화 플랫폼 구축 프로젝트입니다.
+        name: '🚀 스타트업 성장 전략 및 투자 유치',
+        client_company: 'TechStart Ventures', 
+        rfp_content: `AI 기반 핀테크 스타트업의 Series A 투자 유치 및 글로벌 진출 전략 컨설팅입니다.
 
-핵심 요구사항:
-- Python 기반 데이터 분석 엔진
-- 머신러닝 모델 개발 (TensorFlow/PyTorch)
-- 실시간 대시보드 (D3.js, Chart.js)
-- FHIR 표준 준수
-- 개인정보보호 강화
-- Docker 컨테이너화
-- 클라우드 네이티브 아키텍처
+컨설팅 서비스:
+- 비즈니스 모델 검증 및 개선
+- 시장 분석 및 경쟁사 벤치마킹
+- 재무 모델링 및 투자 계획 수립
+- 투자 유치 전략 및 IR 자료 제작
+- 글로벌 진출 시장 분석
+- 파트너십 및 제휴 전략
+- 조직 구조 및 인재 채용 계획
+- 규제 대응 및 컴플라이언스
 
-데이터 규모: 일일 100만건+
-성능 요구사항: 99.9% 가용성`,
-        requirements: ['Python', 'Machine Learning', 'TensorFlow', 'D3.js', 'FHIR', 'Docker', '빅데이터', '데이터 시각화']
+목표: Series A 300억원 투자 유치
+진출 목표: 동남아 3개국`,
+        requirements: ['스타트업 전략', '투자유치', '비즈니스 모델', '시장분석', '재무모델링', '글로벌 진출', '핀테크', 'IR 전략']
       }
     ];
 
-    // Sample team members for each project (same as before)
+    // Sample team members for each project (consulting focused)
     const sampleTeamMembers = [
-      // AI 챗봇 팀
+      // 디지털 전환 전략 팀
       [
-        { name: '김지훈', role: 'AI Engineer', mbti: 'INTJ', skills: 'Python, TensorFlow, NLP, GPT API, 머신러닝', experience: '5년 AI 개발, 챗봇 프로젝트 3건 리드' },
-        { name: '박소영', role: 'Frontend Developer', mbti: 'ENFP', skills: 'React, TypeScript, Redux, CSS3, 반응형 웹', experience: '4년 프론트엔드, 10개+ SPA 구축' },
-        { name: '이성민', role: 'Backend Developer', mbti: 'ISTJ', skills: 'Node.js, Express, MongoDB, Redis, AWS', experience: '6년 백엔드, 대규모 API 설계 전문' },
-        { name: '최유진', role: 'DevOps Engineer', mbti: 'ENTP', skills: 'AWS, Docker, Kubernetes, CI/CD, 모니터링', experience: '3년 클라우드, MSA 운영 경험' }
+        { name: '김민수', role: '디지털 전환 컨설턴트', mbti: 'ENTJ', skills: 'Industry 4.0, IoT 전략, 디지털 혁신, 프로세스 리엔지니어링', experience: '8년 제조업 디지털 전환, 대기업 스마트 팩토리 구축 15건' },
+        { name: '이수정', role: '데이터 분석 전문가', mbti: 'INTJ', skills: ' 빅데이터 분석, AI/ML, 통계 모델링, 데이터 시각화', experience: '6년 데이터 컨설팅, 제조 데이터 분석 전문' },
+        { name: '박영호', role: '변화관리 컨설턴트', mbti: 'ENFJ', skills: '조직 변화관리, 교육 프로그램 설계, 커뮤니케이션 전략', experience: '10년 조직 컨설팅, 대규모 변화관리 프로젝트 20건' },
+        { name: '최혜진', role: '프로세스 혁신 전문가', mbti: 'ISTJ', skills: '프로세스 분석, 업무 최적화, 성과측정, 품질관리', experience: '7년 프로세스 컨설팅, 제조업 효율성 개선 전문' }
       ],
-      // 모바일 앱 팀  
+      // ESG 경영 컨설팅 팀  
       [
-        { name: '장민호', role: 'Full Stack Developer', mbti: 'ENTJ', skills: 'React Native, Node.js, PostgreSQL, Socket.io', experience: '7년 풀스택, 모바일 앱 5개 출시' },
-        { name: '김하늘', role: 'Mobile Developer', mbti: 'ISFP', skills: 'React Native, Swift, Kotlin, 앱스토어 배포', experience: '4년 모바일, 네이티브 + 하이브리드 개발' },
-        { name: '정다은', role: 'UI/UX Designer', mbti: 'ESFJ', skills: 'Figma, Adobe XD, 프로토타이핑, 사용자 테스트', experience: '5년 디자인, 모바일 UX 전문' },
-        { name: '오승철', role: 'Backend Developer', mbti: 'INTP', skills: 'Node.js, PostgreSQL, Redis, 실시간 시스템', experience: '5년 백엔드, 고성능 API 개발' }
+        { name: '정다영', role: 'ESG 전략 컨설턴트', mbti: 'INFJ', skills: 'ESG 전략, 지속가능경영, 탄소중립, 사회적 가치', experience: '5년 ESG 컨설팅, 금융권 ESG 체계 구축 전문' },
+        { name: '송준혁', role: '환경경영 전문가', mbti: 'INTP', skills: '탄소배출 분석, 환경 리스크 관리, 녹색금융, 기후변화 대응', experience: '8년 환경 컨설팅, 탄소중립 로드맵 수립 12건' },
+        { name: '한소라', role: '사회적 가치 컨설턴트', mbti: 'ESFP', skills: '사회공헌, 이해관계자 관리, 사회적 임팩트 측정', experience: '6년 CSV 컨설팅, 사회적 가치 프로그램 설계 전문' },
+        { name: '윤재영', role: '지배구조 전문가', mbti: 'ESTJ', skills: '기업지배구조, 컴플라이언스, 위험관리, 내부통제', experience: '12년 지배구조 컨설팅, 금융권 거버넌스 구축 경험' }
       ],
-      // 헬스케어 팀
+      // 스타트업 성장 전략 팀
       [
-        { name: '황민수', role: 'Data Scientist', mbti: 'INTJ', skills: 'Python, TensorFlow, Pandas, 통계분석, MLOps', experience: '6년 데이터 사이언스, 의료 도메인 전문' },
-        { name: '신지영', role: 'Backend Developer', mbti: 'ISTJ', skills: 'Python, Django, PostgreSQL, Docker, FHIR', experience: '8년 백엔드, 헬스케어 시스템 구축' },
-        { name: '한준혁', role: 'Frontend Developer', mbti: 'ENFJ', skills: 'React, D3.js, Chart.js, 데이터 시각화', experience: '4년 프론트엔드, 대시보드 전문' },
-        { name: '배서현', role: 'DevOps Engineer', mbti: 'ESTP', skills: 'Docker, Kubernetes, 모니터링, 보안', experience: '4년 DevOps, 의료 보안 컴플라이언스' }
+        { name: '임창민', role: '경영전략 컨설턴트', mbti: 'ENTP', skills: '사업전략, 비즈니스 모델, 시장분석, 경쟁전략', experience: '9년 전략 컨설팅, 스타트업 성장 전략 수립 30건' },
+        { name: '강은영', role: '투자유치 전문가', mbti: 'ENFP', skills: '투자유치, 재무모델링, IR 전략, 밸류에이션', experience: '7년 투자 컨설팅, 총 500억 투자유치 성공' },
+        { name: '조성혁', role: '시장진출 전문가', mbti: 'ESTP', skills: '글로벌 진출, 해외시장 분석, 파트너십, 현지화 전략', experience: '8년 해외진출 컨설팅, 동남아 시장 진출 전문' },
+        { name: '김나리', role: '핀테크 도메인 전문가', mbti: 'ISFJ', skills: '핀테크 트렌드, 금융 규제, 블록체인, 결제 시스템', experience: '6년 핀테크 컨설팅, 디지털 금융 서비스 기획 전문' }
       ]
     ];
 
@@ -748,13 +750,13 @@ app.get('/', (c) => {
                                 <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트명</label>
                                 <input type="text" id="projectName" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="예: AI 챗봇 플랫폼 구축">
+                                       placeholder="예: 글로벌 제조업체 디지털 전환 전략">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">고객사명</label>
                                 <input type="text" id="clientCompany" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="예: TechFlow Corp">
+                                       placeholder="예: Global Manufacturing Corp">
                             </div>
                         </div>
                     </div>
@@ -769,14 +771,14 @@ app.get('/', (c) => {
                                 <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 요구사항</label>
                                 <textarea id="rfpContent" rows="6"
                                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                         placeholder="프로젝트의 주요 요구사항, 기술 스택, 기능을 입력하세요...
+                                         placeholder="프로젝트의 주요 컨설팅 영역과 요구사항을 입력하세요...
 
 예:
-- GPT-4 기반 자연어 처리
-- React 기반 프론트엔드
-- Node.js 백엔드 API
-- 실시간 채팅 기능
-- AWS 클라우드 배포"></textarea>
+- 현재 업무 프로세스 분석 및 최적화
+- 디지털 전환 전략 및 로드맵 수립
+- 조직 변화관리 및 교육 프로그램
+- 데이터 기반 의사결정 체계 구축
+- ROI 분석 및 성과 측정 지표 개발"></textarea>
                             </div>
                             <button id="createProjectBtn" 
                                     class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
@@ -833,23 +835,32 @@ app.get('/', (c) => {
                                 <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
                                 <input type="text" id="memberName" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                       placeholder="예: 김지훈">
+                                       placeholder="예: 김민수">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">역할</label>
                                 <select id="memberRole" 
                                         class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                                     <option value="">역할을 선택하세요</option>
+                                    <option value="경영전략 컨설턴트">경영전략 컨설턴트</option>
+                                    <option value="디지털 전환 컨설턴트">디지털 전환 컨설턴트</option>
+                                    <option value="조직/HR 컨설턴트">조직/HR 컨설턴트</option>
+                                    <option value="재무/회계 컨설턴트">재무/회계 컨설턴트</option>
+                                    <option value="마케팅 컨설턴트">마케팅 컨설턴트</option>
+                                    <option value="IT 컨설턴트">IT 컨설턴트</option>
+                                    <option value="데이터 분석 전문가">데이터 분석 전문가</option>
+                                    <option value="프로세스 혁신 전문가">프로세스 혁신 전문가</option>
+                                    <option value="변화관리 컨설턴트">변화관리 컨설턴트</option>
+                                    <option value="ESG 전략 컨설턴트">ESG 전략 컨설턴트</option>
+                                    <option value="투자유치 전문가">투자유치 전문가</option>
+                                    <option value="시장진출 전문가">시장진출 전문가</option>
+                                    <option value="도메인 전문가">도메인 전문가</option>
+                                    <option value="프로젝트 매니저">프로젝트 매니저</option>
                                     <option value="AI Engineer">AI Engineer</option>
                                     <option value="Frontend Developer">Frontend Developer</option>
                                     <option value="Backend Developer">Backend Developer</option>
-                                    <option value="Full Stack Developer">Full Stack Developer</option>
-                                    <option value="Mobile Developer">Mobile Developer</option>
                                     <option value="DevOps Engineer">DevOps Engineer</option>
                                     <option value="UI/UX Designer">UI/UX Designer</option>
-                                    <option value="Data Scientist">Data Scientist</option>
-                                    <option value="Product Manager">Product Manager</option>
-                                    <option value="QA Engineer">QA Engineer</option>
                                 </select>
                             </div>
                             <div>
@@ -888,13 +899,13 @@ app.get('/', (c) => {
                                 <label class="block text-sm font-medium text-gray-700 mb-2">주요 스킬</label>
                                 <input type="text" id="memberSkills" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                       placeholder="예: Python, TensorFlow, NLP, GPT API, 머신러닝">
+                                       placeholder="예: 디지털 전환 전략, 프로세스 리엔지니어링, 변화관리">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">경험 요약</label>
                                 <textarea id="memberExperience" rows="4"
                                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                         placeholder="예: 5년 AI 개발 경험, 챗봇 프로젝트 3건 리드"></textarea>
+                                         placeholder="예: 8년 제조업 디지털 전환 컨설팅, 대기업 스마트 팩토리 구축 15건"></textarea>
                             </div>
                             <button id="addMemberBtn" 
                                     class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors">
