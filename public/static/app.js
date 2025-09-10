@@ -965,15 +965,17 @@ function updateModeIndicator() {
     });
     
     // Update project creation form visibility
-    const createSection = document.querySelector('.bg-white.rounded-lg.shadow-lg');
+    const createSection = document.getElementById('projectCreationSection');
     if (createSection) {
         createSection.style.display = isDemoMode ? 'none' : 'block';
+        console.log('Project creation section:', isDemoMode ? 'HIDDEN' : 'VISIBLE');
     }
     
-    // Update demo buttons visibility
+    // Update demo buttons visibility  
     const demoButtons = document.querySelector('.flex.justify-center.space-x-4.mb-8');
     if (demoButtons) {
         demoButtons.style.display = isDemoMode ? 'flex' : 'none';
+        console.log('Demo buttons:', isDemoMode ? 'VISIBLE' : 'HIDDEN');
     }
 }
 
@@ -1009,5 +1011,9 @@ console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분
 
 // Initialize demo mode on page load
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initializeDemoMode, 100); // Slight delay to ensure DOM is ready
+    setTimeout(() => {
+        initializeDemoMode();
+        // Force update UI elements after DOM is ready
+        updateModeIndicator();
+    }, 200); // Slight delay to ensure DOM is ready
 });

@@ -1484,7 +1484,7 @@ app.get('/', (c) => {
             </div>
 
             <!-- 실제 프로젝트 생성 섹션 -->
-            <div class="bg-white rounded-lg shadow-lg p-8">
+            <div id="projectCreationSection" class="bg-white rounded-lg shadow-lg p-8">
                 <h3 class="text-2xl font-bold text-gray-800 mb-6">
                     <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
                     새 프로젝트 생성
@@ -1670,6 +1670,7 @@ app.get('/', (c) => {
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/app.js"></script>
         <script>
             // Enhanced demo functionality with loading and progress
             let currentProjects = [];
