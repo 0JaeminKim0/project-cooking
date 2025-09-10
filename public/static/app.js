@@ -88,13 +88,160 @@ function hideLoading() {
     }
 }
 
+// AI Analysis Loading Modal Functions
+function showAIAnalysisModal() {
+    const overlay = document.createElement('div');
+    overlay.id = 'aiAnalysisModal';
+    overlay.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 animate-fadeIn';
+    overlay.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl transform animate-slideUp">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div class="relative inline-block">
+                    <div class="w-20 h-20 mx-auto mb-4 relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
+                        <div class="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-brain text-3xl text-purple-600 animate-bounce"></i>
+                        </div>
+                    </div>
+                    <!-- Floating particles -->
+                    <div class="absolute -top-2 -right-2 w-3 h-3 bg-blue-400 rounded-full animate-ping delay-75"></div>
+                    <div class="absolute -top-1 -left-3 w-2 h-2 bg-green-400 rounded-full animate-ping delay-150"></div>
+                    <div class="absolute -bottom-3 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping delay-300"></div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">🤖 AI 상세 분석 중</h3>
+                <p class="text-gray-600">고급 AI 알고리즘이 팀을 분석하고 있습니다</p>
+            </div>
+            
+            <!-- Progress Animation -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">분석 진행률</span>
+                    <span id="analysisProgress" class="text-sm font-semibold text-purple-600">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out transform origin-left scale-x-0"></div>
+                </div>
+            </div>
+            
+            <!-- Analysis Steps -->
+            <div class="space-y-3">
+                <div id="step1" class="flex items-center p-3 rounded-lg bg-purple-50 border-l-4 border-purple-500">
+                    <div class="w-6 h-6 mr-3 bg-purple-500 rounded-full flex items-center justify-center animate-spin">
+                        <i class="fas fa-cog text-white text-sm"></i>
+                    </div>
+                    <span class="text-purple-700 font-medium">팀 구성 분석</span>
+                </div>
+                
+                <div id="step2" class="flex items-center p-3 rounded-lg bg-gray-50 border-l-4 border-gray-300 opacity-50">
+                    <div class="w-6 h-6 mr-3 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-white text-sm"></i>
+                    </div>
+                    <span class="text-gray-600">MBTI 케미스트리 계산</span>
+                </div>
+                
+                <div id="step3" class="flex items-center p-3 rounded-lg bg-gray-50 border-l-4 border-gray-300 opacity-50">
+                    <div class="w-6 h-6 mr-3 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white text-sm"></i>
+                    </div>
+                    <span class="text-gray-600">도메인 적합성 평가</span>
+                </div>
+                
+                <div id="step4" class="flex items-center p-3 rounded-lg bg-gray-50 border-l-4 border-gray-300 opacity-50">
+                    <div class="w-6 h-6 mr-3 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-lightbulb text-white text-sm"></i>
+                    </div>
+                    <span class="text-gray-600">AI 권장사항 생성</span>
+                </div>
+            </div>
+            
+            <!-- Animated dots -->
+            <div class="text-center mt-6">
+                <div class="flex items-center justify-center space-x-1">
+                    <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-150"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Start progress animation
+    startAnalysisProgressAnimation();
+}
+
+function hideAIAnalysisModal() {
+    const modal = document.getElementById('aiAnalysisModal');
+    if (modal) {
+        // Add fade out animation
+        modal.classList.add('animate-fadeOut');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
+
+function startAnalysisProgressAnimation() {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('analysisProgress');
+    const steps = ['step1', 'step2', 'step3', 'step4'];
+    
+    if (!progressBar || !progressText) return;
+    
+    let currentStep = 0;
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 8 + 3; // Random increment between 3-11% (더 느리게)
+        
+        if (progress > 100) {
+            progress = 100;
+            clearInterval(interval);
+        }
+        
+        // Update progress bar
+        progressBar.style.transform = `scaleX(${progress / 100})`;
+        progressText.textContent = `${Math.round(progress)}%`;
+        
+        // Activate steps progressively
+        const stepIndex = Math.floor((progress / 100) * steps.length);
+        if (stepIndex > currentStep && stepIndex < steps.length) {
+            // Complete previous step
+            if (currentStep < steps.length) {
+                const prevStep = document.getElementById(steps[currentStep]);
+                if (prevStep) {
+                    prevStep.classList.remove('bg-purple-50', 'border-purple-500', 'opacity-50');
+                    prevStep.classList.add('bg-green-50', 'border-green-500');
+                    prevStep.querySelector('.bg-purple-500, .bg-gray-300').className = 'w-6 h-6 mr-3 bg-green-500 rounded-full flex items-center justify-center';
+                    prevStep.querySelector('.fa-cog, .fas').className = 'fas fa-check text-white text-sm';
+                    prevStep.querySelector('span').className = 'text-green-700 font-medium';
+                }
+            }
+            
+            // Activate current step
+            currentStep = stepIndex;
+            if (currentStep < steps.length) {
+                const currentStepEl = document.getElementById(steps[currentStep]);
+                if (currentStepEl) {
+                    currentStepEl.classList.remove('bg-gray-50', 'border-gray-300', 'opacity-50');
+                    currentStepEl.classList.add('bg-purple-50', 'border-purple-500');
+                    currentStepEl.querySelector('.bg-gray-300').className = 'w-6 h-6 mr-3 bg-purple-500 rounded-full flex items-center justify-center animate-spin';
+                    currentStepEl.querySelector('span').className = 'text-purple-700 font-medium';
+                }
+            }
+        }
+    }, 1200); // Update every 1.2초로 더 느리게 (90초 타임아웃에 맞춰 조정)
+}
+
 // API functions
 async function apiRequest(url, options = {}) {
     try {
         const response = await axios({
             url,
             method: 'GET',
-            timeout: 30000,
+            timeout: 90000, // 90초로 증가
             ...options
         });
         return response.data;
@@ -104,7 +251,7 @@ async function apiRequest(url, options = {}) {
         if (error.response) {
             throw new Error(error.response.data?.error || 'API 요청 중 오류가 발생했습니다.');
         } else if (error.code === 'ECONNABORTED') {
-            throw new Error('요청 시간이 초과되었습니다. 다시 시도해주세요.');
+            throw new Error('요청 시간이 초과되었습니다 (90초). AI 분석이 복잡하여 시간이 오래 걸릴 수 있습니다. 다시 시도해주세요.');
         } else {
             throw new Error('네트워크 오류가 발생했습니다.');
         }
@@ -399,20 +546,20 @@ async function handleAnalyzeTeam() {
     }
 
     try {
-        showLoading('AI가 팀을 분석하고 있습니다... 잠시만 기다려주세요.');
+        showAIAnalysisModal();
         
         const analysisData = await apiRequest('/api/analyze-team', {
             method: 'POST',
             data: { project_id: currentProject.id }
         });
 
-        hideLoading();
+        hideAIAnalysisModal();
         displayAnalysisResults(analysisData);
         
-        showNotification('팀 분석이 완료되었습니다!', 'success');
+        showNotification('🎉 AI 팀 분석이 완료되었습니다!', 'success');
         
     } catch (error) {
-        hideLoading();
+        hideAIAnalysisModal();
         showNotification(error.message, 'error');
     }
 }
