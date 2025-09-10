@@ -1262,7 +1262,7 @@ function generateAnalysisResultPage(data: {
         <section class="bg-white rounded-2xl shadow-xl p-8 mb-8 page-break">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                 <i class="fas fa-graduation-cap text-indigo-500 mr-3"></i>
-                전문성 강화 로드맵
+                Learning Stuffs
             </h2>
             
             <div class="analysis-content prose prose-lg max-w-none">
@@ -1554,6 +1554,127 @@ app.post('/api/analyze-team', async (c) => {
       return c.json({ error: '분석할 팀원이 없습니다.' }, 400);
     }
 
+    // Check if this is the specific demo project that needs hardcoded results
+    if (project.name === 'AI 구성원 도입 Master Plan 수립' && project.type === 'demo') {
+      const teamReport = `팀원별 상세 분석
+
+1. 허동기 (디지털 전환 컨설턴트, ENTJ)
+핵심 강점: 20년간 축적된 디지털 전환 컨설팅 경험을 바탕으로 복잡한 조직 변화를 전략적으로 설계하고 리드할 수 있는 탁월한 능력을 보유하고 있습니다. 특히 ENTJ 성향답게 전체 프로젝트 비전을 명확히 제시하고 이해관계자들을 설득하는 리더십이 뛰어납니다.
+주의할 점: 때로는 성급하게 결론을 도출하려는 경향이 있어, 현장 실무진의 의견 수렴이나 세부적인 현황 분석에 충분한 시간을 할애하지 못할 위험이 있습니다.
+권장 역할: 프로젝트 전체 총괄 책임자로서 클라이언트 경영진과의 커뮤니케이션을 주도하고, 디지털 전환의 전략적 방향성을 설정하는 역할을 담당해야 합니다.
+협업 방안: 정문규의 세밀한 프로세스 분석 결과를 바탕으로 전략을 구체화하고, 김재민의 기술적 인사이트를 전략 레벨로 승화시키는 가교 역할이 중요합니다.
+
+2. 정문규 (디지털 전환 컨설턴트, ISTJ)
+핵심 강점: 15년간의 제조업 PI(Process Innovation) 경험을 통해 현재 업무 프로세스의 비효율성을 정밀하게 진단하고 개선 방안을 체계적으로 설계할 수 있는 전문성을 갖추고 있습니다. ISTJ의 신중하고 분석적인 성향으로 안정적인 변화관리가 가능합니다.
+주의할 점: 변화보다는 안정성을 선호하는 성향으로 인해 혁신적인 디지털 솔루션에 대해 보수적인 시각을 가질 수 있으며, 이는 프로젝트의 혁신 속도를 저해할 가능성이 있습니다.
+권장 역할: As-Is 프로세스 상세 분석 및 To-Be 프로세스 설계를 담당하되, 단계적 실행 계획 수립을 통해 조직의 변화 수용성을 고려한 현실적인 로드맵을 제시해야 합니다.
+협업 방안: 허동기의 전략적 비전을 구체적인 실행 프로세스로 번역하고, 김재민이 제안하는 AI/IoT 솔루션의 현실적 적용 가능성을 검증하는 역할이 핵심입니다.
+
+3. 김재민 (AI 기술 활용 컨설턴트, ENTP)
+핵심 강점: AI/ML 및 빅데이터 분석 전문성을 바탕으로 전통적인 제조업 환경에 혁신적인 기술 솔루션을 접목할 수 있는 창의적 사고력을 보유하고 있습니다. ENTP의 혁신 지향적 성향으로 미래 지향적인 디지털 전환 모델을 제시할 수 있습니다.
+주의할 점: 기술적 가능성에 집중하다 보면 비즈니스 현실성이나 조직의 수용 능력을 과소평가할 수 있으며, 완벽한 솔루션을 추구하다가 프로젝트 일정이 지연될 위험이 있습니다.
+권장 역할: AI 기반 스마트팩토리 구축 전략 및 데이터 분석 체계 설계를 담당하되, PoC(Proof of Concept) 개발을 통해 기술적 실현 가능성을 검증하는 역할을 맡아야 합니다.
+협업 방안: 허동기와 함께 미래 비전을 구체화하고, 정문규와 협력하여 혁신적 아이디어를 현실적으로 적용 가능한 수준으로 조정하는 것이 중요합니다.
+
+팀 시너지 극대화 전략
+
+역할 기반 3단계 협업 체계를 구축하여 각 팀원의 전문성을 최대한 활용합니다. 1단계에서 허동기가 전략적 방향을 설정하면, 2단계에서 정문규가 현실적 실행 방안을 검토하고, 3단계에서 김재민이 기술적 솔루션을 제시하는 순환 구조로 운영합니다.
+정기적인 크로스 검증 세션을 통해 전략-실행-기술 간의 정합성을 지속적으로 점검하고 조정합니다. 특히 허동기의 거시적 관점과 정문규의 미시적 분석, 김재민의 기술적 혁신이 유기적으로 연결되도록 주간 통합 리뷰를 실시합니다.
+MBTI 특성을 고려한 소통 방식을 적용하여, 외향형인 허동기와 김재민이 아이디어 발산을 주도하고, 내향형인 정문규가 심층적 검토와 검증을 담당하는 역할 분담을 명확히 합니다.
+
+프로젝트 성공을 위한 핵심 제언
+
+데이터 기반 의사결정 체계를 확립하여 모든 전략적 판단을 객관적 데이터로 뒷받침해야 합니다. 김재민의 데이터 분석 역량을 활용하여 현상 진단부터 성과 측정까지 일관된 데이터 체계를 구축하는 것이 핵심입니다.
+단계적 변화 관리 접근법을 통해 조직의 디지털 전환 수용성을 점진적으로 높여나가야 합니다. 정문규의 프로세스 개선 경험을 바탕으로 변화의 속도와 범위를 조직 역량에 맞춰 조절하는 것이 중요합니다.
+지속적인 이해관계자 소통을 통해 프로젝트 전 과정에서 경영진과 현장 실무진의 공감대를 형성하고 유지해야 합니다. 허동기의 리더십을 중심으로 한 체계적인 커뮤니케이션 전략이 프로젝트 성공의 핵심 요소입니다.`;
+
+      const studyMaterials = `추천 학습 가이드
+
+1. 석유 화학(Petrochemical) 도메인 지식
+
+산업적 배경: 석유 화학은 원유 및 천연가스를 정제·분해하여 얻은 기초 화학 물질을 바탕으로 플라스틱, 합성고무, 합성섬유 등 다양한 고부가가치 제품을 생산하는 산업입니다.
+
+핵심 개념:
+1. 석유 정제 과정: 원유를 증류하여 나프타, 경유, 등유 등으로 분리
+2. 나프타 크래킹: 에틸렌, 프로필렌 등 기초 유분(olefin) 생산
+3. 기초유분 → 중간체(벤젠, 톨루엔, 자일렌 등) → 최종 제품
+4. 에너지 효율, 친환경 공정, 탄소중립이 최근 핵심 과제
+
+학습 포인트:
+석유 화학 밸류체인(기초유분 → 중간체 → 최종제품)을 구조적으로 이해할 것
+공정 최적화(Process Optimization) 및 수율 개선의 중요성
+ESG 규제 대응과 차세대 바이오·재활용 화학 기술의 부상
+
+2. AI Agent 기본 지식
+
+개념 정의: AI Agent는 주어진 목표(goal)에 따라 환경(environment)을 관찰하고(observation), 의사결정(decision-making)을 수행하며, 행동(action)을 통해 결과를 만들어내는 자율적 소프트웨어 시스템입니다.
+
+주요 특징:
+1. 지각(Perception): 센서 또는 데이터 입력을 통해 환경 상태를 인식
+2. 추론 및 계획(Reasoning & Planning): 규칙 기반, 머신러닝, LLM 등을 활용해 최적의 행동 경로 결정
+3. 행동(Action): API 호출, 로봇 제어, 데이터 처리 등 구체적 실행
+4. 학습(Learning): 과거 경험 데이터를 기반으로 지속적 성능 개선
+
+유형 예시:
+반응형(Reactive) 에이전트: 즉각적 반응에 집중
+목표 지향형(Goal-based) 에이전트: 장기 목표 달성을 위한 의사결정
+학습형(Learning) 에이전트: 강화학습, 자율 개선 구조 포함
+
+학습 포인트:
+Agent = [지각 → 추론 → 행동 → 학습]의 순환 구조 이해
+산업 적용 사례: 제조 공정 자동화, 스마트 팩토리, 금융 리스크 관리, 고객 서비스 챗봇
+최근 트렌드: LLM 기반 Multi-Agent 시스템 (예: AutoGPT, CrewAI 등)
+
+학습 시너지
+
+석유 화학 도메인의 프로세스 최적화·데이터 활용 과제와 AI Agent의 자율적 의사결정·학습 능력이 결합되면, 공정 효율성 향상, 설비 예지보전, ESG 친환경 공정 혁신 등 산업 전반의 디지털 전환을 가속화할 수 있습니다.`;
+
+      // Fixed scores for the demo project
+      const chemistryScore = 92;
+      const domainCoverage = 94;
+      const technicalCoverage = 89;
+      const overallScore = 91;
+
+      const teamAnalyzer = new TeamAnalyzer();
+      const visualizationData = teamAnalyzer.generateVisualizationData(
+        ['디지털 전환', 'Industry 4.0', '프로세스 최적화', '변화관리', 'IoT/AI 전략'],
+        teamMembers,
+        {
+          chemistry: chemistryScore,
+          domain: domainCoverage,
+          technical: technicalCoverage
+        }
+      );
+
+      const analysisResult = await runQuery(
+        `INSERT INTO analysis_results (
+          project_id, team_chemistry_score, domain_coverage_score, 
+          technical_coverage_score, overall_fit_score, recommendations, study_materials
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          body.project_id,
+          chemistryScore,
+          domainCoverage,
+          technicalCoverage,
+          overallScore,
+          teamReport,
+          studyMaterials
+        ]
+      );
+
+      return c.json({
+        analysis_id: analysisResult.lastID,
+        team_chemistry_score: chemistryScore,
+        domain_coverage_score: domainCoverage,
+        technical_coverage_score: technicalCoverage,
+        overall_fit_score: overallScore,
+        recommendations: teamReport,
+        study_materials: studyMaterials,
+        visualization_data: visualizationData
+      });
+    }
+
+    // Regular analysis flow for other projects
     const aiService = new AIService();
     const teamAnalyzer = new TeamAnalyzer();
 
@@ -1765,7 +1886,7 @@ app.post('/api/demo/generate', async (c) => {
     const sampleTeamMembers = [
       // 디지털 전환 전략 팀
       [
-        { name: '허동가', role: '디지털 전환 컨설턴트', mbti: 'ENTJ', skills: 'Industry 4.0, IoT 전략, 디지털 혁신, 프로세스 리엔지니어링', experience: '20년 디지털 전환 컨설팅, 대규모 변화관리 프로젝트 20건' },
+        { name: '허동기', role: '디지털 전환 컨설턴트', mbti: 'ENTJ', skills: 'Industry 4.0, IoT 전략, 디지털 혁신, 프로세스 리엔지니어링', experience: '20년 디지털 전환 컨설팅, 대규모 변화관리 프로젝트 20건' },
         { name: '정문규', role: '디지털 전환 컨설턴트', mbti: 'ISTJ', skills: '프로세스 혁신(PI), 제조 공정 개선(MP), 업무 프로세스 최적화, 변화 관리, 성과 측정 및 KPI 설계', experience: '15년 디지털 전환 컨설팅, 제조 PI 전문' },
         { name: '김재민', role: 'AI 기술 활용 컨설턴트', mbti: 'ENTP', skills: '빅데이터 분석, AI/ML, 통계 모델링, 데이터 시각화', experience: '4년 AI 도입 컨설팅, AI 모델 개발 및 PoC 전문' },
       ],
