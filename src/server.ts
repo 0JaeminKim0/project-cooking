@@ -1531,11 +1531,13 @@ app.get('/', (c) => {
 - 데이터 기반 의사결정 체계 구축
 - ROI 분석 및 성과 측정 지표 개발"></textarea>
                             </div>
-                            <button id="createProjectBtn" 
-                                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-magic mr-2"></i>
-                                프로젝트 생성 및 AI 분석
-                            </button>
+                            <form id="createProjectForm">
+                                <button type="submit" id="createProjectBtn" 
+                                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-magic mr-2"></i>
+                                    프로젝트 생성 및 AI 분석
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -1547,7 +1549,7 @@ app.get('/', (c) => {
                     <i class="fas fa-folder-open mr-2 text-blue-600"></i>
                     프로젝트 목록
                 </h3>
-                <div id="projectContainer" class="grid gap-6">
+                <div id="projectList" class="grid gap-6">
                     <!-- 프로젝트 목록이 여기에 동적으로 추가됩니다 -->
                     <div class="text-center py-8 text-gray-500">
                         <i class="fas fa-folder-open text-4xl mb-3"></i>
@@ -1561,10 +1563,94 @@ app.get('/', (c) => {
             <div id="projectDetails" class="hidden mt-8 bg-white rounded-lg shadow-lg p-8">
                 <h3 class="text-2xl font-bold text-gray-800 mb-6">
                     <i class="fas fa-info-circle mr-2 text-green-600"></i>
-                    프로젝트 상세 정보
+                    <span id="currentProjectName">프로젝트 상세 정보</span>
                 </h3>
-                <div id="projectDetailsContent">
-                    <!-- 프로젝트 상세 내용이 여기에 동적으로 추가됩니다 -->
+                
+                <!-- Team Members List -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">팀 구성원</h4>
+                    <div id="teamMembersList">
+                        <!-- 팀원 목록이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+                
+                <!-- Analyze Team Button -->
+                <div class="mb-8">
+                    <button id="analyzeTeamBtn" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                        <i class="fas fa-brain mr-2"></i>
+                        팀원을 먼저 추가해주세요
+                    </button>
+                </div>
+                
+                <!-- Back to Projects Button -->
+                <div class="mb-4">
+                    <button id="backToProjects" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-left mr-1"></i> 프로젝트 목록으로
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Analysis Results Section -->
+            <div id="analysisResults" class="hidden mt-8 bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-chart-line mr-2 text-purple-600"></i>
+                    AI 분석 결과
+                </h3>
+                
+                <!-- Score Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="text-center p-4 bg-blue-100 rounded-lg">
+                        <div id="overallScore" class="text-3xl font-bold text-blue-800">0</div>
+                        <div class="text-sm text-blue-600">전체 적합도</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-100 rounded-lg">
+                        <div id="chemistryScore" class="text-3xl font-bold text-green-800">0</div>
+                        <div class="text-sm text-green-600">팀 케미스트리</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-100 rounded-lg">
+                        <div id="domainScore" class="text-3xl font-bold text-purple-800">0</div>
+                        <div class="text-sm text-purple-600">도메인 커버리지</div>
+                    </div>
+                    <div class="text-center p-4 bg-orange-100 rounded-lg">
+                        <div id="technicalScore" class="text-3xl font-bold text-orange-800">0</div>
+                        <div class="text-sm text-orange-600">기술 커버리지</div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">기술 역량 분석</h4>
+                        <div class="h-64 relative">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">커버리지 분석</h4>
+                        <div class="h-64 relative">
+                            <canvas id="coverageChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommendations and Study Materials -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                        <h5 class="font-semibold text-yellow-800 mb-2">
+                            <i class="fas fa-lightbulb mr-2"></i>개선 권장사항
+                        </h5>
+                        <div id="recommendationsContent" class="text-yellow-700">
+                            <!-- 권장사항 내용 -->
+                        </div>
+                    </div>
+                    <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                        <h5 class="font-semibold text-green-800 mb-2">
+                            <i class="fas fa-book mr-2"></i>추천 학습 자료
+                        </h5>
+                        <div id="studyMaterialsContent" class="text-green-700">
+                            <!-- 학습 자료 내용 -->
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1658,11 +1744,13 @@ app.get('/', (c) => {
                                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                          placeholder="예: 8년 제조업 디지털 전환 컨설팅, 대기업 스마트 팩토리 구축 15건"></textarea>
                             </div>
-                            <button id="addMemberBtn" 
-                                    class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors">
-                                <i class="fas fa-user-plus mr-2"></i>
-                                팀원 추가하기
-                            </button>
+                            <form id="addTeamMemberForm">
+                                <button type="submit" id="addMemberBtn" 
+                                        class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors">
+                                    <i class="fas fa-user-plus mr-2"></i>
+                                    팀원 추가하기
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -1670,431 +1758,41 @@ app.get('/', (c) => {
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <script src="/static/app.js"></script>
         <script>
-            // Enhanced demo functionality with loading and progress
-            let currentProjects = [];
-            let currentProject = null;
-            let currentTeamMembers = [];
-
-            function showLoading(message = '처리 중...') {
-                const overlay = document.createElement('div');
-                overlay.id = 'loadingOverlay';
-                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                overlay.innerHTML = \`
-                    <div class="bg-white p-8 rounded-lg text-center max-w-md">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                        <p class="text-gray-700">\${message}</p>
-                    </div>
-                \`;
-                document.body.appendChild(overlay);
-            }
-
-            function hideLoading() {
-                const overlay = document.getElementById('loadingOverlay');
-                if (overlay) {
-                    overlay.remove();
-                }
-            }
-
-            function showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = \`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 \${
-                    type === 'success' ? 'bg-green-500' : 
-                    type === 'error' ? 'bg-red-500' : 
-                    type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                } text-white\`;
-                notification.innerHTML = \`
-                    <div class="flex items-center">
-                        <i class="fas fa-\${
-                            type === 'success' ? 'check-circle' : 
-                            type === 'error' ? 'exclamation-circle' : 
-                            type === 'warning' ? 'exclamation-triangle' : 'info-circle'
-                        } mr-2"></i>
-                        <span>\${message}</span>
-                    </div>
-                \`;
+            // Minimal inline script that delegates to app.js functions
+            // This prevents function conflicts between inline and external scripts
+            console.log('HTML Template loaded - Delegating to app.js');
+            
+            // Wait for app.js to load and then setup event handlers
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM loaded - Setting up delegation to app.js');
                 
-                document.body.appendChild(notification);
-                
+                // Initial load will be handled by app.js loadProjects() function
                 setTimeout(() => {
-                    notification.remove();
-                }, 3000);
-            }
-
-            async function loadProjects() {
-                try {
-                    const response = await axios.get('/api/projects');
-                    currentProjects = response.data;
-                    displayProjects(currentProjects);
-                    
-                    // Hide team member addition section
-                    document.getElementById('addTeamMemberSection').classList.add('hidden');
-                    document.getElementById('projectDetails').classList.add('hidden');
-                } catch (error) {
-                    console.error('프로젝트 로드 실패:', error);
-                    showNotification('프로젝트를 불러오는데 실패했습니다.', 'error');
-                }
-            }
-
-            function displayProjects(projects) {
-                const container = document.getElementById('projectContainer');
-                if (!container) return;
-
-                if (projects.length === 0) {
-                    container.innerHTML = \`
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-folder-open text-4xl mb-3"></i>
-                            <p>프로젝트가 없습니다.</p>
-                            <p class="text-sm mt-2">🚀 Demo Test로 샘플 프로젝트를 생성해보세요!</p>
-                        </div>
-                    \`;
-                    return;
-                }
-
-                const demoIndicators = ['🤖', '📱', '🏥'];
-                const hasDemoProjects = projects.some(p => demoIndicators.some(icon => p.name.includes(icon)));
-
-                container.innerHTML = \`
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-list mr-2 text-blue-600"></i>
-                        생성된 프로젝트 (\${projects.length}개)
-                    </h3>
-                    <div class="space-y-3">
-                        \${projects.map(project => \`
-                            <div class="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors" 
-                                 onclick="selectProject(\${project.id})">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <div class="flex items-center">
-                                            <h5 class="font-semibold text-gray-800">\${project.name}</h5>
-                                            \${hasDemoProjects && demoIndicators.some(icon => project.name.includes(icon)) ? 
-                                                '<span class="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">DEMO</span>' : 
-                                                ''}
-                                        </div>
-                                        \${project.client_company ? \`<p class="text-sm text-gray-600">\${project.client_company}</p>\` : ''}
-                                        \${project.rfp_summary ? \`<p class="text-sm text-gray-500 mt-1">\${project.rfp_summary.slice(0, 100)}...</p>\` : ''}
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-xs text-gray-500">\${new Date(project.created_at).toLocaleDateString('ko-KR')}</span>
-                                        <div class="flex items-center mt-1">
-                                            <i class="fas fa-arrow-right text-blue-600"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        \`).join('')}
-                    </div>
-                \`;
-            }
-
-            async function selectProject(projectId) {
-                try {
-                    showLoading('프로젝트 정보를 불러오는 중...');
-                    
-                    const response = await axios.get(\`/api/projects/\${projectId}\`);
-                    const projectData = response.data;
-                    
-                    currentProject = projectData.project;
-                    currentTeamMembers = projectData.team_members || [];
-                    
-                    hideLoading();
-                    showProjectDetails(currentProject, currentTeamMembers, projectData.analysis);
-                    
-                    // Show team member addition section
-                    document.getElementById('addTeamMemberSection').classList.remove('hidden');
-                    
-                } catch (error) {
-                    hideLoading();
-                    showNotification('프로젝트 조회 중 오류가 발생했습니다.', 'error');
-                }
-            }
-
-            function showProjectDetails(project, teamMembers, analysis) {
-                const container = document.getElementById('projectContainer');
-                if (!container) return;
-
-                container.innerHTML = \`
-                    <div class="mb-6">
-                        <button onclick="loadProjects()" class="text-blue-600 hover:text-blue-800 mb-4">
-                            <i class="fas fa-arrow-left mr-1"></i> 프로젝트 목록으로
-                        </button>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            <i class="fas fa-cog mr-2 text-blue-600"></i>
-                            \${project.name}
-                        </h3>
-                        \${project.client_company ? \`<p class="text-gray-600">\${project.client_company}</p>\` : ''}
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <div class="bg-blue-50 p-6 rounded-lg">
-                            <h4 class="text-lg font-semibold mb-4 text-blue-800">
-                                <i class="fas fa-users mr-2"></i>
-                                팀 구성 (\${teamMembers.length}명)
-                            </h4>
-                            \${teamMembers.length === 0 ? 
-                                '<p class="text-blue-700">팀원이 없습니다.</p>' :
-                                teamMembers.map(member => \`
-                                    <div class="bg-white p-3 rounded mb-2">
-                                        <div class="flex items-center mb-1">
-                                            <span class="font-medium">\${member.name}</span>
-                                            <span class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">\${member.role}</span>
-                                            \${member.mbti ? \`<span class="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">\${member.mbti}</span>\` : ''}
-                                        </div>
-                                        \${member.skills_extracted ? \`<p class="text-sm text-gray-600">스킬: \${member.skills_extracted}</p>\` : ''}
-                                    </div>
-                                \`).join('')
-                            }
-                            \${teamMembers.length > 0 ? \`
-                                <button onclick="analyzeTeam(\${project.id})" 
-                                        class="w-full mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
-                                    <i class="fas fa-brain mr-2"></i>
-                                    AI 팀 분석 시작
-                                </button>
-                            \` : ''}
-                        </div>
-
-                        <div class="bg-green-50 p-6 rounded-lg">
-                            <h4 class="text-lg font-semibold mb-4 text-green-800">
-                                <i class="fas fa-file-alt mr-2"></i>
-                                프로젝트 정보
-                            </h4>
-                            \${project.rfp_content ? \`
-                                <div class="bg-white p-3 rounded mb-3">
-                                    <h5 class="font-medium text-green-800 mb-2">RFP 내용</h5>
-                                    <p class="text-sm text-gray-700">\${project.rfp_content.slice(0, 200)}...</p>
-                                </div>
-                            \` : ''}
-                            \${project.requirements_analysis ? \`
-                                <div class="bg-white p-3 rounded">
-                                    <h5 class="font-medium text-green-800 mb-2">요구사항 분석</h5>
-                                    <p class="text-sm text-gray-700">\${project.requirements_analysis}</p>
-                                </div>
-                            \` : ''}
-                        </div>
-                    </div>
-
-                    \${analysis ? \`
-                        <div id="analysisResults" class="bg-white p-6 rounded-lg border">
-                            <h4 class="text-xl font-bold mb-4 text-purple-800">
-                                <i class="fas fa-chart-line mr-2"></i>
-                                AI 분석 결과
-                            </h4>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div class="text-center p-4 bg-blue-100 rounded">
-                                    <div class="text-2xl font-bold text-blue-800">\${Math.round(analysis.overall_fit_score || 0)}</div>
-                                    <div class="text-sm text-blue-600">전체 적합도</div>
-                                </div>
-                                <div class="text-center p-4 bg-green-100 rounded">
-                                    <div class="text-2xl font-bold text-green-800">\${Math.round(analysis.team_chemistry_score || 0)}</div>
-                                    <div class="text-sm text-green-600">팀 케미스트리</div>
-                                </div>
-                                <div class="text-center p-4 bg-purple-100 rounded">
-                                    <div class="text-2xl font-bold text-purple-800">\${Math.round(analysis.domain_coverage_score || 0)}</div>
-                                    <div class="text-sm text-purple-600">도메인 커버리지</div>
-                                </div>
-                                <div class="text-center p-4 bg-orange-100 rounded">
-                                    <div class="text-2xl font-bold text-orange-800">\${Math.round(analysis.technical_coverage_score || 0)}</div>
-                                    <div class="text-sm text-orange-600">기술 커버리지</div>
-                                </div>
-                            </div>
-                            \${analysis.recommendations ? \`
-                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                                    <h5 class="font-semibold text-yellow-800 mb-2">
-                                        <i class="fas fa-lightbulb mr-2"></i>개선 권장사항
-                                    </h5>
-                                    <p class="text-yellow-700">\${analysis.recommendations}</p>
-                                </div>
-                            \` : ''}
-                            \${analysis.study_materials ? \`
-                                <div class="bg-green-50 border-l-4 border-green-400 p-4">
-                                    <h5 class="font-semibold text-green-800 mb-2">
-                                        <i class="fas fa-book mr-2"></i>추천 학습 자료
-                                    </h5>
-                                    <p class="text-green-700">\${analysis.study_materials}</p>
-                                </div>
-                            \` : ''}
-                        </div>
-                    \` : ''}
-                \`;
-            }
-
-            async function analyzeTeam(projectId) {
-                try {
-                    showLoading('AI가 팀을 분석하고 있습니다... 잠시만 기다려주세요.');
-                    
-                    const response = await axios.post('/api/analyze-team', { project_id: projectId });
-                    const analysis = response.data;
-                    
-                    hideLoading();
-                    showNotification('팀 분석이 완료되었습니다!', 'success');
-                    
-                    // Reload project details to show analysis results
-                    selectProject(projectId);
-                    
-                } catch (error) {
-                    hideLoading();
-                    showNotification('팀 분석 중 오류가 발생했습니다.', 'error');
-                }
-            }
-
-            // Demo test functionality
-            document.getElementById('demoTestBtn').addEventListener('click', async () => {
-                if (confirm('🚀 데모 테스트를 시작하시겠습니까?\\n\\n📋 샘플 프로젝트 3개와 각각의 팀원들이 생성됩니다.\\n\\n체험 방법:\\n1️⃣ 생성된 프로젝트 중 하나를 클릭\\n2️⃣ 팀원 구성 확인\\n3️⃣ "AI 팀 분석 시작" 버튼 클릭\\n4️⃣ 분석 결과 확인')) {
-                    try {
-                        showLoading('📋 데모 데이터를 생성하고 있습니다...\\n\\n3개 프로젝트와 12명의 팀원을 만드는 중입니다\\n잠시만 기다려주세요 (약 5-10초)');
-                        
-                        const response = await axios.post('/api/demo/generate');
-                        
-                        showNotification('✨ 데모 데이터가 성공적으로 생성되었습니다!', 'success');
-                        
-                        // Show demo info
-                        document.getElementById('demoInfo').classList.remove('hidden');
-                        
-                        // Load and display projects
-                        await loadProjects();
-                        
-                        hideLoading();
-                        
-                        // Manual demo flow - let user experience each step
-                        if (response.data.projects && response.data.projects.length > 0) {
-                            showNotification('✨ 데모 데이터 생성 완료!\\n\\n이제 아래 단계를 직접 체험해보세요:\\n\\n1️⃣ 원하는 프로젝트를 클릭해서 선택하세요\\n2️⃣ 팀원 구성을 확인해보세요\\n3️⃣ "AI 팀 분석 시작" 버튼을 클릭해보세요', 'success');
-                        }
-                        
-                    } catch (error) {
-                        hideLoading();
-                        showNotification('데모 데이터 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+                    if (typeof loadProjects === 'function') {
+                        loadProjects();
+                        console.log('Initial loadProjects() called from app.js');
                     }
-                }
+                }, 100);
             });
-
-            document.getElementById('resetDemoBtn').addEventListener('click', async () => {
-                if (confirm('🗑️ 모든 데모 데이터를 삭제하시겠습니까?\\n\\n이 작업은 되돌릴 수 없습니다.')) {
-                    try {
-                        showLoading('데모 데이터를 초기화하고 있습니다...');
-                        
-                        await axios.delete('/api/demo/reset');
-                        
-                        // Hide demo info
-                        document.getElementById('demoInfo').classList.add('hidden');
-                        
-                        // Clear project container
-                        const container = document.getElementById('projectContainer');
-                        if (container) {
-                            container.innerHTML = \`
-                                <div class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-folder-open text-4xl mb-3"></i>
-                                    <p>프로젝트가 없습니다.</p>
-                                    <p class="text-sm mt-2">🚀 Demo Test로 샘플 프로젝트를 생성해보세요!</p>
-                                </div>
-                            \`;
-                        }
-                        
-                        hideLoading();
-                        showNotification('모든 데모 데이터가 삭제되었습니다.', 'info');
-                        
-                    } catch (error) {
-                        hideLoading();
-                        showNotification('데이터 초기화 중 오류가 발생했습니다: ' + error.message, 'error');
-                    }
-                }
-            });
-
-            // Real project creation functionality
-            document.getElementById('createProjectBtn').addEventListener('click', async () => {
-                const projectName = document.getElementById('projectName').value.trim();
-                const clientCompany = document.getElementById('clientCompany').value.trim();
-                const rfpContent = document.getElementById('rfpContent').value.trim();
-
-                if (!projectName) {
-                    showNotification('프로젝트명을 입력해주세요.', 'error');
-                    return;
-                }
-
-                if (!rfpContent) {
-                    showNotification('RFP 내용을 입력해주세요.', 'error');
-                    return;
-                }
-
-                try {
-                    showLoading('프로젝트를 생성하고 AI 분석을 진행하고 있습니다...');
-                    
-                    const response = await axios.post('/api/projects', {
-                        name: projectName,
-                        client_company: clientCompany,
-                        rfp_content: rfpContent
-                    });
-
-                    // Clear form
-                    document.getElementById('projectName').value = '';
-                    document.getElementById('clientCompany').value = '';
-                    document.getElementById('rfpContent').value = '';
-
-                    // Reload projects
-                    await loadProjects();
-                    
-                    hideLoading();
-                    showNotification('✅ 프로젝트가 성공적으로 생성되었습니다!\\n\\n프로젝트 목록에서 생성된 프로젝트를 클릭하여 팀원을 추가하세요.', 'success');
-
-                } catch (error) {
-                    hideLoading();
-                    showNotification('프로젝트 생성 중 오류가 발생했습니다: ' + error.message, 'error');
-                }
-            });
-
-            // Team member addition functionality
-            document.getElementById('addMemberBtn').addEventListener('click', async () => {
-                if (!currentProject) {
-                    showNotification('먼저 프로젝트를 선택해주세요.', 'error');
-                    return;
-                }
-
-                const name = document.getElementById('memberName').value.trim();
-                const role = document.getElementById('memberRole').value;
-                const mbti = document.getElementById('memberMbti').value;
-                const skills = document.getElementById('memberSkills').value.trim();
-                const experience = document.getElementById('memberExperience').value.trim();
-
-                if (!name || !role || !mbti) {
-                    showNotification('이름, 역할, MBTI는 필수 항목입니다.', 'error');
-                    return;
-                }
-
-                try {
-                    showLoading('팀원을 추가하고 있습니다...');
-                    
-                    const response = await axios.post('/api/team-members', {
-                        project_id: currentProject.id,
-                        name: name,
-                        role: role,
-                        mbti: mbti,
-                        cd_card_content: skills + '\\n' + experience
-                    });
-
-                    // Clear form
-                    document.getElementById('memberName').value = '';
-                    document.getElementById('memberRole').value = '';
-                    document.getElementById('memberMbti').value = '';
-                    document.getElementById('memberSkills').value = '';
-                    document.getElementById('memberExperience').value = '';
-
-                    // Reload project details
-                    await selectProject(currentProject.id);
-                    
-                    hideLoading();
-                    showNotification('✅ 팀원이 성공적으로 추가되었습니다!\\n\\n팀 구성이 완료되면 "AI 팀 분석 시작" 버튼을 클릭하세요.', 'success');
-
-                } catch (error) {
-                    hideLoading();
-                    showNotification('팀원 추가 중 오류가 발생했습니다: ' + error.message, 'error');
-                }
-            });
-
-            // Initialize on page load
-            document.addEventListener('DOMContentLoaded', () => {
-                loadProjects();
-            });
+            
+            // Global functions that will be overridden by app.js
+            function selectProject(projectId) {
+                console.log('selectProject called, delegating to app.js');
+                // This will be overridden by app.js
+            }
+            
+            function analyzeTeam(projectId) {
+                console.log('analyzeTeam called, delegating to app.js');
+                // This will be overridden by app.js
+            }
+            
+            function loadProjects() {
+                console.log('loadProjects called, waiting for app.js override');
+                // This will be overridden by app.js
+            }
         </script>
+        <script src="/static/app.js"></script>
     </body>
     </html>
   `;

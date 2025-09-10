@@ -936,13 +936,13 @@ async function quickAnalyzeProject(projectId) {
 // Demo Mode Functions
 function handleDemoModeToggle() {
     isDemoMode = demoModeToggle.checked;
-    console.log('Demo Mode:', isDemoMode ? 'ON' : 'OFF');
+    console.log('🎛️ Demo Mode Toggle Changed:', isDemoMode ? 'ON' : 'OFF');
     
-    // Reload projects with new mode
-    loadProjects();
-    
-    // Update UI elements
+    // Update UI elements first
     updateModeIndicator();
+    
+    // Then reload projects with new mode
+    loadProjects();
     
     // Show notification
     showNotification(
@@ -951,6 +951,9 @@ function handleDemoModeToggle() {
         '💼 실제 모드가 활성화되었습니다. 실제 프로젝트만 표시됩니다.',
         'info'
     );
+    
+    // Save preference to localStorage
+    saveDemoModePreference();
 }
 
 function updateModeIndicator() {
@@ -964,18 +967,38 @@ function updateModeIndicator() {
         indicator.className = `mode-indicator ${modeColor} font-medium`;
     });
     
-    // Update project creation form visibility
+    // Update project creation form visibility - CRITICAL FOR DEMO MODE
     const createSection = document.getElementById('projectCreationSection');
     if (createSection) {
-        createSection.style.display = isDemoMode ? 'none' : 'block';
+        if (isDemoMode) {
+            createSection.style.display = 'none';
+            createSection.classList.add('hidden');
+        } else {
+            createSection.style.display = 'block';
+            createSection.classList.remove('hidden');
+        }
         console.log('Project creation section:', isDemoMode ? 'HIDDEN' : 'VISIBLE');
     }
     
     // Update demo buttons visibility  
     const demoButtons = document.querySelector('.flex.justify-center.space-x-4.mb-8');
     if (demoButtons) {
-        demoButtons.style.display = isDemoMode ? 'flex' : 'none';
+        if (isDemoMode) {
+            demoButtons.style.display = 'flex';
+            demoButtons.classList.remove('hidden');
+        } else {
+            demoButtons.style.display = 'none';
+            demoButtons.classList.add('hidden');
+        }
         console.log('Demo buttons:', isDemoMode ? 'VISIBLE' : 'HIDDEN');
+    }
+    
+    // Update demo info visibility
+    const demoInfo = document.getElementById('demoInfo');
+    if (demoInfo && isDemoMode) {
+        demoInfo.classList.remove('hidden');
+    } else if (demoInfo && !isDemoMode) {
+        demoInfo.classList.add('hidden');
     }
 }
 
@@ -1009,11 +1032,18 @@ loadProjects = async function() {
 console.log('AI 팀 분석 서비스 JavaScript 로드됨');
 console.log('사용 가능한 기능: 프로젝트 생성, 팀원 추가, AI 분석, 파일 업로드, 데모 테스트, Demo Mode Toggle');
 
-// Initialize demo mode on page load
+// Initialize demo mode on page load  
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 App.js DOMContentLoaded - Starting initialization');
+    
     setTimeout(() => {
+        console.log('🔧 Initializing demo mode...');
         initializeDemoMode();
+        
         // Force update UI elements after DOM is ready
+        console.log('🎨 Updating UI mode indicators...');
         updateModeIndicator();
+        
+        console.log('✅ App.js initialization complete');
     }, 200); // Slight delay to ensure DOM is ready
 });
